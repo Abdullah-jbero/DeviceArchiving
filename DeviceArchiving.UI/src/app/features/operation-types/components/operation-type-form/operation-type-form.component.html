@@ -1,0 +1,16 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h2>{{ isEditMode ? 'Edit Operation Type' : 'Add Operation Type' }}</h2>
+  <div>
+    <label for="name">Name:</label>
+    <input id="name" formControlName="name" required />
+    <div *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
+      Name is required.
+    </div>
+  </div>
+  <div>
+    <label for="description">Description:</label>
+    <textarea id="description" formControlName="description"></textarea>
+  </div>
+  <button type="submit" [disabled]="form.invalid">Save</button>
+  <a routerLink="/operation-types">Cancel</a>
+</form>

@@ -1,0 +1,53 @@
+<div class="details-container" *ngIf="device">
+  <h2>تفاصيل الجهاز</h2>
+  <div class="device-info">
+    <p><strong>المعرف:</strong> {{ device.id }}</p>
+    <p><strong>الجهة:</strong> {{ device.source }}</p>
+    <p><strong>اسم اللابتوب:</strong> {{ device.laptopName }}</p>
+    <p><strong>النوع:</strong> {{ device.type }}</p>
+    <p><strong>رقم السيريال:</strong> {{ device.serialNumber }}</p>
+    <p><strong>الحالة:</strong> {{ device.isActive ? 'نشط' : 'غير نشط' }}</p>
+  </div>
+
+  <h3>العمليات المرتبطة</h3>
+  <table class="operations-table">
+    <thead>
+      <tr>
+        <th>المعرف</th>
+        <th>اسم العملية</th>
+        <th>التفاصيل</th>
+        <th>تاريخ الإنشاء</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let operation of operations">
+        <td>{{ operation.operationName }}</td>
+        <td>{{ operation.oldValue }}</td>
+        <td>{{ operation.newValue }}</td>
+        <td>{{ operation.createdAt | date:'medium' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>إضافة عملية جديدة</h3>
+  <form [formGroup]="operationForm" (ngSubmit)="addOperation()" class="operation-form">
+    <div class="form-group">
+      <label for="operationTypeId">نوع العملية:</label>
+      <select id="operationTypeId" formControlName="operationTypeId" required>
+        <option value="">اختر نوع العملية</option>
+        <option *ngFor="let type of operationTypes" [value]="type.id">{{ type.name }}</option>
+      </select>
+      <div class="error" *ngIf="operationForm.get('operationTypeId')?.invalid && operationForm.get('operationTypeId')?.touched">
+        نوع العملية مطلوب.
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="details">التفاصيل:</label>
+      <textarea id="details" formControlName="details"></textarea>
+    </div>
+    <div class="form-actions">
+      <button type="submit" [disabled]="operationForm.invalid" class="submit-button">إضافة العملية</button>
+    </div>
+  </form>
+  <a routerLink="/devices" class="back-button">العودة إلى القائمة</a>
+</div>

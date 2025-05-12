@@ -1,0 +1,26 @@
+<div>
+  <h2>Operation Types List</h2>
+  <input type="text" [(ngModel)]="searchTerm" placeholder="Search operation types" (input)="loadOperationTypes()" />
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let type of operationTypes">
+        <td>{{ type.id }}</td>
+        <td>{{ type.name }}</td>
+        <td>{{ type.description }}</td>
+        <td>
+          <a [routerLink]="['edit', type.id]">Edit</a>
+          <button (click)="deleteOperationType(type.id)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <a routerLink="add">Add Operation Type</a>
+</div>

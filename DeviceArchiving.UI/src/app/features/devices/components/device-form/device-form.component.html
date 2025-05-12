@@ -1,0 +1,71 @@
+<div class="form-container">
+  <h2>{{ isEditMode ? 'تعديل جهاز' : 'إضافة جهاز' }}</h2>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="device-form">
+    <div class="form-columns">
+      <div class="form-column">
+        <div class="form-group">
+          <label for="source">الجهة:</label>
+          <input id="source" formControlName="source" required />
+          <div class="error" *ngIf="form.get('source')?.invalid && form.get('source')?.touched">
+            الجهة مطلوبة.
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="brotherName">اسم الأخ:</label>
+          <input id="brotherName" formControlName="brotherName" />
+        </div>
+        <div class="form-group">
+          <label for="laptopName">اسم اللابتوب:</label>
+          <input id="laptopName" formControlName="laptopName" required />
+          <div class="error" *ngIf="form.get('laptopName')?.invalid && form.get('laptopName')?.touched">
+            اسم اللابتوب مطلوب.
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="systemPassword">كلمة سر النظام:</label>
+          <input id="systemPassword" formControlName="systemPassword" type="password" />
+        </div>
+        <div class="form-group">
+          <label for="windowsPassword">كلمة سر الويندوز:</label>
+          <input id="windowsPassword" formControlName="windowsPassword" type="password" />
+        </div>
+      </div>
+      <div class="form-column">
+        <div class="form-group">
+          <label for="hardDrivePassword">كلمة سر الهارد:</label>
+          <input id="hardDrivePassword" formControlName="hardDrivePassword" type="password" />
+        </div>
+        <div class="form-group">
+          <label for="freezePassword">كلمة سر التجميد:</label>
+          <input id="freezePassword" formControlName="freezePassword" type="password" />
+        </div>
+        <div class="form-group">
+          <label for="code">الكود:</label>
+          <input id="code" formControlName="code" />
+        </div>
+        <div class="form-group">
+          <label for="type">النوع:</label>
+          <input id="type" formControlName="type" required />
+          <div class="error" *ngIf="form.get('type')?.invalid && form.get('type')?.touched">
+            النوع مطلوب.
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="serialNumber">رقم السيريال:</label>
+          <input id="serialNumber" formControlName="serialNumber" required />
+          <div class="error" *ngIf="form.get('serialNumber')?.invalid && form.get('serialNumber')?.touched">
+            رقم السيريال مطلوب.
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="card">الكرت:</label>
+          <input id="card" formControlName="card" />
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" [disabled]="form.invalid" class="submit-button">حفظ</button>
+      <a routerLink="/devices" class="cancel-button">إلغاء</a>
+    </div>
+  </form>
+</div>
