@@ -8,6 +8,7 @@ namespace DeviceArchiving.Service
         IEnumerable<Device> GetAllDevices();
         void UpdateDevice(Device device);
         void DeleteDevice(int id);
+        
 
     }
 }
