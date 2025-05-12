@@ -2,19 +2,24 @@
   <!-- نموذج البحث المتقدم -->
   <div class="search-form">
     <h3>البحث في الأجهزة</h3>
-    <!-- <div class="search-fields">
-      <p-inputText [(ngModel)]="searchCriteria.laptopName" placeholder="اسم اللاب توب" (input)="applyFilter()" />
-      <p-inputText [(ngModel)]="searchCriteria.serialNumber" placeholder="الرقم التسلسلي" (input)="applyFilter()" />
-      <p-dropdown
-        [(ngModel)]="searchCriteria.type"
-        [options]="deviceTypes"
-        placeholder="اختر النوع"
-        (onChange)="applyFilter()"
-        optionLabel="label"
-        optionValue="value"
-      />
+    <div class="search-fields">
+      <!-- Global Search Input -->
+      <input [(ngModel)]="globalSearchQuery" placeholder="البحث العام (الاسم، الرقم التسلسلي، النوع...)" 
+             (input)="applyFilter()" style="width: 50%;" />
+      
+      <!-- Existing Advanced Search Fields -->
+      <input [(ngModel)]="searchCriteria.laptopName" placeholder="اسم اللاب توب" (input)="applyFilter()" />
+      <input [(ngModel)]="searchCriteria.serialNumber" placeholder="الرقم التسلسلي" (input)="applyFilter()" />
+      
+      <p-dropdown [(ngModel)]="searchCriteria.type" [options]="deviceTypes" placeholder="اختر النوع"
+        (onChange)="applyFilter()" optionLabel="label" optionValue="value" />
+
       <p-button label="مسح" (click)="clearSearch()" styleClass="p-button-secondary" />
-    </div> -->
+
+      <p-button label="تصدير" (click)="exportToExcel()" styleClass="p-button-info" />
+
+      
+    </div>
   </div>
 
   <!-- تخطيط الجدول والتفاصيل -->
@@ -22,16 +27,7 @@
     <!-- جدول الأجهزة -->
     <div class="table-container">
       <p-table [value]="filteredDevices" [tableStyle]="{'min-width': '100%'}" sortMode="multiple"
-        styleClass="p-datatable-gridlines p-datatable-striped" [rowHover]="true" [showCurrentPageReport]="true"
-        responsiveLayout="scroll" 
-
-        
-        >
-        <ng-template pTemplate="caption">
-          <div class="flex justify-content-end">
-            <p-inputText [(ngModel)]="globalFilter" placeholder="بحث عام" />
-          </div>
-        </ng-template>
+        styleClass="p-datatable-gridlines p-datatable-striped" [rowHover]="true" [showCurrentPageReport]="true" responsiveLayout="scroll">
         <ng-template pTemplate="header">
           <tr>
             <th pSortableColumn="source" style="width:10%" filter="true" field="source">
