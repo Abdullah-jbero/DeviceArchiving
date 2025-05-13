@@ -1,131 +1,143 @@
+
+<p-toast position="top-center"></p-toast>
 <div class="container" dir="rtl">
-  <!-- نموذج البحث المتقدم -->
-  <div class="search-form">
-    <h3>البحث في الأجهزة</h3>
-    <div class="search-fields">
-      <!-- Global Search Input -->
-      <input [(ngModel)]="globalSearchQuery" placeholder="البحث العام (الاسم، الرقم التسلسلي، النوع...)" 
-             (input)="applyFilter()" style="width: 50%;" />
-      
-      <!-- Existing Advanced Search Fields -->
-      <input [(ngModel)]="searchCriteria.laptopName" placeholder="اسم اللاب توب" (input)="applyFilter()" />
-      <input [(ngModel)]="searchCriteria.serialNumber" placeholder="الرقم التسلسلي" (input)="applyFilter()" />
-      
-      <p-dropdown [(ngModel)]="searchCriteria.type" [options]="deviceTypes" placeholder="اختر النوع"
-        (onChange)="applyFilter()" optionLabel="label" optionValue="value" />
-
-      <p-button label="مسح" (click)="clearSearch()" styleClass="p-button-secondary" />
-
-      <p-button label="تصدير" (click)="exportToExcel()" styleClass="p-button-info" />
-
-      
-    </div>
+  <div style="text-align: left; margin-bottom: 1rem;">
+    <a [routerLink]="'/operation-types'"
+      style="padding: 0.5rem 1rem; background-color: #17a2b8; color: white; border-radius: 4px; text-decoration: none; font-weight: bold;">
+      صفحة أنواع العمليات
+    </a>
   </div>
+    <!-- نموذج البحث المتقدم -->
+    <div class="search-form">
+      <h3>البحث في الأجهزة</h3>
+      <div class="search-fields">
+        <!-- Global Search Input -->
+        <input [(ngModel)]="globalSearchQuery" placeholder="البحث العام (الاسم، الرقم التسلسلي، النوع...)"
+          (input)="applyFilter()" style="width: 50%;" />
 
-  <!-- تخطيط الجدول والتفاصيل -->
-  <div class="content-wrapper">
-    <!-- جدول الأجهزة -->
-    <div class="table-container">
-      <p-table [value]="filteredDevices" [tableStyle]="{'min-width': '100%'}" sortMode="multiple"
-        styleClass="p-datatable-gridlines p-datatable-striped" [rowHover]="true" [showCurrentPageReport]="true" responsiveLayout="scroll">
-        <ng-template pTemplate="header">
-          <tr>
-            <th pSortableColumn="source" style="width:10%" filter="true" field="source">
-              الجهة <p-sortIcon field="source" />
-              <p-columnFilter type="text" field="source" display="menu"></p-columnFilter>
-            </th>
-            <th pSortableColumn="brotherName" style="width:10%">
-              اسم الأخ <p-sortIcon field="brotherName" />
-              <p-columnFilter type="text" field="brotherName" display="menu"></p-columnFilter>
-            </th>
-            <th pSortableColumn="laptopName" style="width:10%">
-              اسم اللاب توب <p-sortIcon field="laptopName" />
-              <p-columnFilter type="text" field="laptopName" display="menu"></p-columnFilter>
-            </th>
-            <th pSortableColumn="systemPassword" style="width:10%">
-              كلمة مرور النظام <p-sortIcon field="systemPassword" />
-            </th>
-            <th pSortableColumn="windowsPassword" style="width:10%">
-              كلمة مرور ويندوز <p-sortIcon field="windowsPassword" />
-            </th>
-            <th pSortableColumn="hardDrivePassword" style="width:10%">
-              كلمة التشفير <p-sortIcon field="hardDrivePassword" />
-            </th>
-            <th pSortableColumn="freezePassword" style="width:10%">
-              كلمة التجميد <p-sortIcon field="freezePassword" />
-            </th>
-            <th pSortableColumn="code" style="width:8%">
-              الكود <p-sortIcon field="code" />
-            </th>
-            <th pSortableColumn="type" style="width:8%">
-              النوع <p-sortIcon field="type" />
-              <p-columnFilter type="text" field="type" display="menu"></p-columnFilter>
-            </th>
-            <th pSortableColumn="serialNumber" style="width:10%">
-              الرقم التسلسلي <p-sortIcon field="serialNumber" />
-              <p-columnFilter type="text" field="serialNumber" display="menu"></p-columnFilter>
-            </th>
-            <th pSortableColumn="card" style="width:8%">
-              الكرت <p-sortIcon field="card" />
-            </th>
-            <th pSortableColumn="isActive" style="width:8%">
-              الحالة <p-sortIcon field="isActive" />
-              <p-columnFilter type="boolean" field="isActive" display="menu"></p-columnFilter>
-            </th>
-            <th pSortableColumn="createdAt" style="width:10%">
-              تاريخ الإنشاء <p-sortIcon field="createdAt" />
-              <p-columnFilter type="date" field="createdAt" display="menu"></p-columnFilter>
-            </th>
-            <th style="width:8%">الإجراءات</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-device>
-          <tr>
-            <td>{{ device.source }}</td>
-            <td>{{ device.brotherName }}</td>
-            <td>{{ device.laptopName }}</td>
-            <td>{{ device.systemPassword }}</td>
-            <td>{{ device.windowsPassword }}</td>
-            <td>{{ device.hardDrivePassword }}</td>
-            <td>{{ device.freezePassword }}</td>
-            <td>{{ device.code }}</td>
-            <td>{{ device.type }}</td>
-            <td>{{ device.serialNumber }}</td>
-            <td>{{ device.card }}</td>
-            <td>{{ device.isActive ? 'نشط' : 'غير نشط' }}</td>
-            <td>{{ device.createdAt | date: 'short' }}</td>
-            <td>
-              <p-button label="التفاصيل" styleClass="p-button-text" (click)="selectDevice(device)" />
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="summary">
-          <div class="flex align-items-center justify-content-between">
-            إجمالي عدد الأجهزة هو {{ filteredDevices ? filteredDevices.length : 0 }} جهاز.
-          </div>
-        </ng-template>
-      </p-table>
+        <!-- Existing Advanced Search Fields -->
+        <input [(ngModel)]="searchCriteria.laptopName" placeholder="اسم اللاب توب" (input)="applyFilter()" />
+        <input [(ngModel)]="searchCriteria.serialNumber" placeholder="الرقم التسلسلي" (input)="applyFilter()" />
+        <p-dropdown [(ngModel)]="searchCriteria.type" [options]="deviceTypes" placeholder="اختر النوع"
+          (onChange)="applyFilter()" optionLabel="label" optionValue="value" />
+        <p-button label="مسح" (click)="clearSearch()" styleClass="p-button-secondary" />
+
+      </div>
+    </div>
+    <!-- زر إضافة جهاز جديد -->
+    <div class="button-container">
+      <p-button label="إضافة جهاز" routerLink="add" styleClass="p-button-success add-button" />
+      <p-button label="تعديل جهاز" icon="pi pi-pencil"
+        [routerLink]="selectedDevice ? ['edit', selectedDevice.id] : null"
+        styleClass="p-button-secondary custom-button add-button" [disabled]="!selectedDevice" />
+
+      <p-button label="حذف جهاز" icon="pi pi-trash" (click)="deleteDevice()" styleClass="p-button-danger custom-button"
+        [disabled]="!selectedDevice" />
+
+      <p-button label="تصدير" icon="pi pi-file-export" (click)="exportToExcel()"
+        styleClass="p-button-info custom-button" />
+      <p-button label="استيراد" icon="pi pi-file-import" (click)="importDevices()"
+        styleClass="p-button-info custom-button" />
+
+
+      <p-button label="اضافة العمليات" styleClass="p-button-success" [disabled]="!selectedDevice" (click)="addOperation(selectedDevice!.id!)" />
+
+
+
     </div>
 
-    <!-- قسم التفاصيل الجانبي -->
-    <div class="details-container" *ngIf="selectedDevice">
-      <h3>تفاصيل الجهاز: {{ selectedDevice.laptopName }}</h3>
-      <p><strong>الرقم التسلسلي:</strong> {{ selectedDevice.serialNumber }}</p>
-      <p><strong>النوع:</strong> {{ selectedDevice.type }}</p>
-      <p><strong>الحالة:</strong> {{ selectedDevice.isActive ? 'نشط' : 'غير نشط' }}</p>
-      <h4>العمليات</h4>
-      <ul class="operation-list">
-        <li *ngFor="let operation of operations">
-          <strong>{{ operation.operationName }}</strong> في {{ operation.createdAt | date: 'short' }}<br />
-          <span *ngIf="operation.oldValue">القيمة القديمة: {{ operation.oldValue }}</span><br
-            *ngIf="operation.oldValue" />
-          <span *ngIf="operation.newValue">القيمة الجديدة: {{ operation.newValue }}</span>
-        </li>
-      </ul>
-      <p-button label="إغلاق" styleClass="p-button-danger" (click)="selectedDevice = null" />
+    <!-- تخطيط الجدول والتفاصيل -->
+    <div class="content-wrapper">
+      <!-- جدول الأجهزة -->
+      <div class="table-container">
+        <p-table [value]="filteredDevices" [tableStyle]="{'min-width': '100%'}" sortMode="single"
+          styleClass="p-datatable-gridlines p-datatable-striped" [rowHover]="true" [showCurrentPageReport]="true"
+          responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="source" style="width:10%" filter="true" field="source">
+                الجهة <p-sortIcon field="source" />
+                <p-columnFilter type="text" field="source" display="menu"></p-columnFilter>
+              </th>
+              <th pSortableColumn="brotherName" style="width:10%">
+                اسم الأخ <p-sortIcon field="brotherName" />
+                <p-columnFilter type="text" field="brotherName" display="menu"></p-columnFilter>
+              </th>
+              <th pSortableColumn="laptopName" style="width:10%">
+                اسم اللاب توب <p-sortIcon field="laptopName" />
+                <p-columnFilter type="text" field="laptopName" display="menu"></p-columnFilter>
+              </th>
+              <th pSortableColumn="systemPassword" style="width:10%">
+                كلمة مرور النظام <p-sortIcon field="systemPassword" />
+              </th>
+              <th pSortableColumn="windowsPassword" style="width:10%">
+                كلمة مرور ويندوز <p-sortIcon field="windowsPassword" />
+              </th>
+              <th pSortableColumn="hardDrivePassword" style="width:10%">
+                كلمة التشفير <p-sortIcon field="hardDrivePassword" />
+              </th>
+              <th pSortableColumn="freezePassword" style="width:10%">
+                كلمة التجميد <p-sortIcon field="freezePassword" />
+              </th>
+              <th pSortableColumn="code" style="width:8%">
+                الكود <p-sortIcon field="code" />
+              </th>
+              <th pSortableColumn="type" style="width:8%">
+                النوع <p-sortIcon field="type" />
+                <p-columnFilter type="text" field="type" display="menu"></p-columnFilter>
+              </th>
+              <th pSortableColumn="serialNumber" style="width:10%">
+                الرقم التسلسلي <p-sortIcon field="serialNumber" />
+                <p-columnFilter type="text" field="serialNumber" display="menu"></p-columnFilter>
+              </th>
+              <th pSortableColumn="card" style="width:8%">
+                الكرت <p-sortIcon field="card" />
+              </th>
+              <th pSortableColumn="createdAt" style="width:10%">
+                تاريخ الإنشاء <p-sortIcon field="createdAt" />
+                <p-columnFilter type="date" field="createdAt" display="menu"></p-columnFilter>
+              </th>
+
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-device>
+            <tr [class.selected-row]="device === selectedDevice"  (click)="selectDevice(device)">
+              <td>{{ device.source }}</td>
+              <td>{{ device.brotherName }}</td>
+              <td>{{ device.laptopName }}</td>
+              <td>{{ device.systemPassword }}</td>
+              <td>{{ device.windowsPassword }}</td>
+              <td>{{ device.hardDrivePassword }}</td>
+              <td>{{ device.freezePassword }}</td>
+              <td>{{ device.code }}</td>
+              <td>{{ device.type }}</td>
+              <td>{{ device.serialNumber }}</td>
+              <td>{{ device.card }}</td>
+              <td>{{ device.createdAt | date: 'short' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="summary">
+            <div class="flex align-items-center justify-content-between">
+              إجمالي عدد الأجهزة هو {{ filteredDevices ? filteredDevices.length : 0 }} جهاز.
+            </div>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- قسم التفاصيل الجانبي -->
+      <div class="details-container" *ngIf="selectedDevice">
+        <h4>العمليات</h4>
+        <ul class="operation-list">
+          <li *ngFor="let operation of operations">
+            <strong>{{ operation.operationName }}</strong> في {{ operation.createdAt | date: 'short' }}<br />
+            <span *ngIf="operation.oldValue">القيمة القديمة: {{ operation.oldValue }}</span><br
+              *ngIf="operation.oldValue" />
+            <span *ngIf="operation.newValue">القيمة الجديدة: {{ operation.newValue }}</span>
+          </li>
+        </ul>
+        <p-button label="إغلاق" styleClass="p-button-danger" (click)="selectedDevice = null" />
+      </div>
     </div>
+
+
   </div>
-
-  <!-- زر إضافة جهاز جديد -->
-  <p-button label="إضافة جهاز" routerLink="add" styleClass="p-button-success add-button" />
-</div>

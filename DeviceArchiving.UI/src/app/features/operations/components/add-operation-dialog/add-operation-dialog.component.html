@@ -1,0 +1,66 @@
+
+    <div class="dialog-content" dir="rtl">
+      <p-toast></p-toast>
+      <h3>إضافة عملية للجهاز: {{ deviceName }}</h3>
+      <form #operationForm="ngForm" (ngSubmit)="save()" *ngIf="!isLoading; else loading">
+        <div class="form-group">
+          <label for="operationName">اسم العملية <span class="required">*</span></label>
+          <p-dropdown
+            id="operationName"
+            [(ngModel)]="operation.operationName"
+            name="operationName"
+            [options]="operationTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [filter]="true"
+            filterBy="label"
+            placeholder="اختر نوع العملية"
+            [required]="true"
+            styleClass="p-inputtext"
+          ></p-dropdown>
+          <small
+            *ngIf="operationForm.controls['operationName']?.invalid && operationForm.submitted"
+            class="p-error"
+          >
+            اسم العملية مطلوب.
+          </small>
+        </div>
+        <div class="form-group">
+          <label for="oldValue">القيمة القديمة (اختياري)</label>
+          <input
+            pInputText
+            id="oldValue"
+            [(ngModel)]="operation.oldValue"
+            name="oldValue"
+            class="p-inputtext"
+            maxlength="255"
+          />
+        </div>
+        <div class="form-group">
+          <label for="newValue">القيمة الجديدة (اختياري)</label>
+          <input
+            pInputText
+            id="newValue"
+            [(ngModel)]="operation.newValue"
+            name="newValue"
+            class="p-inputtext"
+            maxlength="255"
+          />
+        </div>
+        <div class="dialog-footer">
+          <p-button label="إلغاء" styleClass="p-button-secondary" (click)="cancel()" />
+          <p-button
+            label="إضافة"
+            styleClass="p-button-primary"
+            type="submit"
+            [disabled]="operationForm.invalid"
+          />
+        </div>
+      </form>
+      <ng-template #loading>
+        <div class="loading">
+          <p-progressSpinner></p-progressSpinner>
+          <p>جاري التحميل...</p>
+        </div>
+      </ng-template>
+    </div>

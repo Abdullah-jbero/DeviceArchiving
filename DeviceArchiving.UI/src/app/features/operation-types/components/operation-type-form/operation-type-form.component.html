@@ -1,16 +1,24 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <h2>{{ isEditMode ? 'Edit Operation Type' : 'Add Operation Type' }}</h2>
-  <div>
-    <label for="name">Name:</label>
-    <input id="name" formControlName="name" required />
-    <div *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
-      Name is required.
+<div class="form-container" dir="rtl">
+  <p-toast></p-toast>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading; else loading">
+    <h2>{{ isEditMode ? 'تعديل نوع العملية' : 'إضافة نوع العملية' }}</h2>
+    <div class="form-group">
+      <label for="name">الاسم: <span class="required">*</span></label>
+      <input pInputText id="name" formControlName="name" />
+      <small class="p-error" *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
+        الاسم مطلوب.
+      </small>
     </div>
-  </div>
-  <div>
-    <label for="description">Description:</label>
-    <textarea id="description" formControlName="description"></textarea>
-  </div>
-  <button type="submit" [disabled]="form.invalid">Save</button>
-  <a routerLink="/operation-types">Cancel</a>
-</form>
+    <div class="form-actions">
+      <p-button type="submit" label="حفظ" [disabled]="form.invalid || isLoading"></p-button>
+      <p-button label="إلغاء" styleClass="p-button-secondary" (click)="cancel()"></p-button>
+    </div>
+  </form>
+
+  <ng-template #loading>
+    <div class="loading">
+      <p-progressSpinner></p-progressSpinner>
+      <p>جاري التحميل...</p>
+    </div>
+  </ng-template>
+</div>

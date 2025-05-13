@@ -1,11 +1,9 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { OperationListComponent } from './components/operation-list/operation-list.component';
 import { OperationTypeFormComponent } from '../operation-types/components/operation-type-form/operation-type-form.component';
 
 
 const routes: Routes = [
-  { path: '', component: OperationListComponent },
   { path: 'add', component: OperationTypeFormComponent },
   { path: 'edit/:id', component: OperationTypeFormComponent }
 ];

@@ -1,0 +1,27 @@
+.dialog-content {
+  padding: 1.5rem;
+}
+.form-group {
+  margin-bottom: 1.5rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+.required {
+  color: red;
+}
+.p-error {
+  color: red;
+  font-size: 0.875rem;
+}
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.p-inputtext {
+  width: 100%;
+}

@@ -1,5 +1,5 @@
 .container {
-  max-width: 1600px;
+  max-width: calc(100% - 40px);
   margin: 0 auto;
   padding: 20px;
   direction: rtl;
@@ -24,6 +24,16 @@
 .search-fields .p-inputtext,
 .search-fields .p-dropdown {
   width: 200px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+.button-container p-button {
+  margin-right: 10px;
 }
 
 .content-wrapper {
@@ -96,4 +106,9 @@
   .search-fields .p-dropdown {
     width: 100%;
   }
+}
+
+::ng-deep .selected-row {
+  background-color: #87CEEB !important;
+  color: #000 !important; /* لون النص أسود */
 }
