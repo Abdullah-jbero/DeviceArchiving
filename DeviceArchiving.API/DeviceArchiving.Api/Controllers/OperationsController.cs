@@ -1,11 +1,13 @@
 ﻿using DeviceArchiving.Data.Entities;
 using DeviceArchiving.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeviceArchiving.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class OperationsController : ControllerBase
 {
     private readonly IOperationService operationService;

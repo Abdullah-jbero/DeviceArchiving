@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeviceArchiving.Data.Migrations
 {
     [DbContext(typeof(DeviceArchivingContext))]
-    [Migration("20250510120620_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250517124224_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,62 +33,62 @@ namespace DeviceArchiving.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("BrotherName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Card")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("EncryptionKey")
+                    b.Property<string>("FreezePassword")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HardDrivePassword")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
+                    b.Property<string>("LaptopName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SerialNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SystemPassword")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Version")
+                    b.Property<string>("WindowsPassword")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SerialNumber")
-                        .IsUnique();
-
                     b.ToTable("Devices");
-                });
-
-            modelBuilder.Entity("DeviceArchiving.Data.Entities.DeviceOperation", b =>
-                {
-                    b.Property<int>("DeviceId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OperationId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("DeviceId", "OperationId");
-
-                    b.HasIndex("OperationId");
-
-                    b.ToTable("DeviceOperations");
                 });
 
             modelBuilder.Entity("DeviceArchiving.Data.Entities.Operation", b =>
@@ -102,52 +102,57 @@ namespace DeviceArchiving.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OperationName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
+                    b.Property<string>("newValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("OperationDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("oldValue")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeviceId");
 
                     b.ToTable("Operations");
                 });
 
-            modelBuilder.Entity("DeviceArchiving.Data.Entities.DeviceOperation", b =>
+            modelBuilder.Entity("DeviceArchiving.Data.Entities.OperationType", b =>
                 {
-                    b.HasOne("DeviceArchiving.Data.Entities.Device", "Device")
-                        .WithMany("DeviceOperations")
-                        .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.HasOne("DeviceArchiving.Data.Entities.Operation", "Operation")
-                        .WithMany("DeviceOperations")
-                        .HasForeignKey("OperationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Navigation("Device");
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Navigation("Operation");
-                });
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
 
-            modelBuilder.Entity("DeviceArchiving.Data.Entities.Device", b =>
-                {
-                    b.Navigation("DeviceOperations");
+                    b.HasKey("Id");
+
+                    b.ToTable("OperationsTypes");
                 });
 
             modelBuilder.Entity("DeviceArchiving.Data.Entities.Operation", b =>
                 {
-                    b.Navigation("DeviceOperations");
+                    b.HasOne("DeviceArchiving.Data.Entities.Device", null)
+                        .WithMany("Operation")
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DeviceArchiving.Data.Entities.Device", b =>
+                {
+                    b.Navigation("Operation");
                 });
 #pragma warning restore 612, 618
         }

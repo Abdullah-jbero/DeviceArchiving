@@ -26,14 +26,14 @@ export class DeviceFormComponent implements OnInit {
       source: ['', Validators.required],
       brotherName: [''],
       laptopName: ['', Validators.required],
-      systemPassword: [''],
-      windowsPassword: [''],
-      hardDrivePassword: [''],
-      freezePassword: [''],
-      code: [''],
+      systemPassword: ['',Validators.required],
+      windowsPassword: ['',Validators.required],
+      hardDrivePassword: ['',Validators.required],
+      freezePassword: ['',Validators.required],
+      code: ['',Validators.required],
       type: ['', Validators.required],
       serialNumber: ['', Validators.required],
-      card: [''],
+      card: ['',Validators.required],
       isActive: [true]
     });
   }

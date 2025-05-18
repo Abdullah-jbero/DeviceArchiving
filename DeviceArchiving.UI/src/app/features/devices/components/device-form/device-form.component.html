@@ -24,24 +24,39 @@
         <div class="form-group">
           <label for="systemPassword">كلمة سر النظام:</label>
           <input id="systemPassword" formControlName="systemPassword" type="password" />
+          <div class="error" *ngIf="form.get('systemPassword')?.invalid && form.get('systemPassword')?.touched">
+            كلمة سر النظام مطلوبة.
+          </div>
         </div>
         <div class="form-group">
           <label for="windowsPassword">كلمة سر الويندوز:</label>
           <input id="windowsPassword" formControlName="windowsPassword" type="password" />
+          <div class="error" *ngIf="form.get('windowsPassword')?.invalid && form.get('windowsPassword')?.touched">
+            كلمة سر الويندوز مطلوبة.
+          </div>
         </div>
       </div>
       <div class="form-column">
         <div class="form-group">
           <label for="hardDrivePassword">كلمة سر الهارد:</label>
           <input id="hardDrivePassword" formControlName="hardDrivePassword" type="password" />
+          <div class="error" *ngIf="form.get('hardDrivePassword')?.invalid && form.get('hardDrivePassword')?.touched">
+            كلمة سر الهارد مطلوبة.
+          </div>
         </div>
         <div class="form-group">
           <label for="freezePassword">كلمة سر التجميد:</label>
           <input id="freezePassword" formControlName="freezePassword" type="password" />
+          <div class="error" *ngIf="form.get('freezePassword')?.invalid && form.get('freezePassword')?.touched">
+            كلمة سر التجميد مطلوبة.
+          </div>
         </div>
         <div class="form-group">
           <label for="code">الكود:</label>
           <input id="code" formControlName="code" />
+          <div class="error" *ngIf="form.get('code')?.invalid && form.get('code')?.touched">
+            الكود مطلوب.
+          </div>
         </div>
         <div class="form-group">
           <label for="type">النوع:</label>
@@ -60,6 +75,9 @@
         <div class="form-group">
           <label for="card">الكرت:</label>
           <input id="card" formControlName="card" />
+          <div class="error" *ngIf="form.get('card')?.invalid && form.get('card')?.touched">
+            الكرت مطلوب.
+          </div>
         </div>
       </div>
     </div>

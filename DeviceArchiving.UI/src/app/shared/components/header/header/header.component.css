@@ -1,0 +1,128 @@
+/* Ensure RTL direction and Arabic font */
+:host {
+  direction: rtl;
+  font-family: 'Noto Sans Arabic', 'Roboto', sans-serif;
+}
+.app-header {
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+  /* Blue gradient for primary color */
+  color: #ffffff;
+  padding: 0 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+}
+.app-header .app-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+.app-header .app-title:hover {
+  opacity: 0.9;
+}
+.app-header .spacer {
+  flex: 1 1 auto;
+}
+.app-header nav {
+  display: flex;
+  gap: 8px;
+}
+.app-header nav a {
+  color: #ffffff;
+  font-size: 1rem;
+  padding: 0 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+.app-header nav a.active-link {
+  background-color: rgba(255, 255, 255, 0.2);
+  font-weight: 500;
+}
+.app-header nav a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.app-header nav a[matRipple] {
+  position: relative;
+  overflow: hidden;
+}
+.app-header .user-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  padding: 0 8px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+.app-header .user-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.app-header .user-button .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ffffff;
+}
+.app-header .user-button .user-name {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+.app-header .user-button mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+/* Menu styles */
+:host ::ng-deep .mat-menu-panel {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+}
+:host ::ng-deep .mat-menu-panel .mat-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #333333;
+  height: 48px;
+  padding-right: 16px;
+  /* Adjusted for RTL */
+  transition: background-color 0.2s ease;
+}
+:host ::ng-deep .mat-menu-panel .mat-menu-item:hover {
+  background-color: #f5f5f5;
+}
+:host ::ng-deep .mat-menu-panel .mat-menu-item mat-icon {
+  color: #666666;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+/* Responsive design */
+@media (max-width: 600px) {
+  .app-header {
+    padding: 0 8px;
+  }
+  .app-header .app-title {
+    font-size: 1.2rem;
+  }
+  .app-header nav {
+    gap: 4px;
+  }
+  .app-header nav a {
+    font-size: 0.875rem;
+    padding: 0 8px;
+  }
+  .app-header .user-button .user-name {
+    display: none;
+    /* Hide username on small screens */
+  }
+  .app-header .user-button .avatar {
+    width: 28px;
+    height: 28px;
+  }
+}

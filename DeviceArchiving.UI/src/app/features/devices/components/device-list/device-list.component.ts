@@ -76,12 +76,21 @@ export class DeviceListComponent implements OnInit {
     if (this.globalSearchQuery.trim()) {
       const query = this.globalSearchQuery.toLowerCase();
       filtered = filtered.filter(device =>
-        (device.laptopName?.toLowerCase().includes(query) || false) ||
-        (device.serialNumber?.toLowerCase().includes(query) || false) ||
         (device.source?.toLowerCase().includes(query) || false) ||
         (device.brotherName?.toLowerCase().includes(query) || false) ||
-        (device.type?.toLowerCase().includes(query) || false) ||
+        (device.laptopName?.toLowerCase().includes(query) || false) ||
+        (device.systemPassword?.toLowerCase().includes(query) || false) ||
+        (device.windowsPassword?.toLowerCase().includes(query) || false) ||
+        (device.hardDriassword?.toLowerCase().includes(query) || false) ||
+        (device.freezePassword?.toLowerCase().includes(query) || false) ||
+        (device.codvePassword?.toLowerCase().includes(query) || false) ||
+        (device.source?.toLowerCase().includes(query) || false) ||
+        (device.freezePe?.toLowerCase().includes(query) || false) ||
+        (device.serialNumber?.toLowerCase().includes(query) || false) ||
         (device.code?.toLowerCase().includes(query) || false)
+        (device.card?.toLowerCase().includes(query) || false)
+        (device.type?.toLowerCase().includes(query) || false)
+        (device.createdAt?.toLowerCase().includes(query) || false)
       );
     }
 

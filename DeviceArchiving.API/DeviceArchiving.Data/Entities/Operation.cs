@@ -7,6 +7,5 @@ public class Operation
     public string? oldValue { get; set; }
     public string? newValue { get; set; }
     public DateTime CreatedAt { get; set; }
-
-
+    public User User { get; set; } = new();
 }

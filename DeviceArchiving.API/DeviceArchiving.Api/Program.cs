@@ -1,40 +1,76 @@
-using DeviceArchiving.Data.Contexts;
+﻿using DeviceArchiving.Data.Contexts;
+using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Service;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add CORS services
-builder.Services.AddCors(options =>
+// 🔧 Configuration
+var configuration = builder.Configuration;
+var services = builder.Services;
+
+// 🔌 Add Services
+services.AddControllers();
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen();
+
+// 🧩 Dependency Injection
+services.AddScoped<IDeviceService, DeviceService>();
+services.AddScoped<IOperationService, OperationService>();
+services.AddScoped<IOperationTypeService, OperationTypeService>();
+services.AddScoped<IAccountService, AccountService>(); // Optional, in case you missed it
+
+// 🌐 CORS
+services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins",
-        builder => builder
-            .AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader());
+    options.AddPolicy("AllowAllOrigins", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader());
 });
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IDeviceService, DeviceService>();
-builder.Services.AddScoped<IOperationService, OperationService>();
-builder.Services.AddScoped<IOperationTypeService, OperationTypeService>();
+// 🗄️ Database
+services.AddDbContext<DeviceArchivingContext>(options =>
+    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDbContext<DeviceArchivingContext>(options =>
-    options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=DeviceArchiving;Trusted_Connection=True;"));
+
+// Bind JwtSettings
+services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("JWTSettings"));
+
+// JWT Setup
+var jwtSettings = builder.Configuration.GetSection("JWTSettings").Get<JwtSettings>();
+
+// 🔐 JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
+        };
+    });
+
 
 var app = builder.Build();
 
-// Use CORS policy
+// ⚙️ Middleware
 app.UseCors("AllowAllOrigins");
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 app.Run();
