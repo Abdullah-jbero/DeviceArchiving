@@ -4,4 +4,5 @@ export interface Operation {
     oldValue?: string | null;
     newValue?: string | null;
     createdAt: string;
+    comment?: string;
 }

@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DeviceArchiving.Data.Dto;
+namespace DeviceArchiving.Data.Dto.Users;
 
 public class AuthenticationRequest
 {
-    [Required(ErrorMessage = "Email is required.")]
-    public string Email { get; set; } = null!;
+    [Required(ErrorMessage = "UserName is required.")]
+    public string UserName { get; set; } = null!;
 
     [Required(ErrorMessage = "Password is required.")]
     public string Password { get; set; } = null!;

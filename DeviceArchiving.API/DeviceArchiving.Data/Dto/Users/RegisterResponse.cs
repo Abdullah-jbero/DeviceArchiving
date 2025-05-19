@@ -1,4 +1,4 @@
-﻿namespace DeviceArchiving.Data.Dto;
+﻿namespace DeviceArchiving.Data.Dto.Users;
 
 public class RegisterResponse
 {
@@ -9,4 +9,3 @@ public class RegisterResponse
         Message = message;
     }
 }
-

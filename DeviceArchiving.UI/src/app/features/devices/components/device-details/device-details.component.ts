@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Device } from '../../../../core/models/device.model';
 import { OperationType } from '../../../../core/models/operation-type.model';
 import { Operation } from '../../../../core/models/operation.model';
 import { DeviceService } from '../../../../core/services/device.service';
 import { OperationTypeService } from '../../../../core/services/operation-type.service';
 import { OperationService } from '../../../../core/services/operation.service';
+import { DeviceDto } from '../../../../core/models/device.model';
+
 
 @Component({
   selector: 'app-device-details',
@@ -16,7 +17,7 @@ import { OperationService } from '../../../../core/services/operation.service';
   standalone: false,
 })
 export class DeviceDetailsComponent implements OnInit {
-  device: Device | null = null;
+  device: DeviceDto | null = null;
   operations: Operation[] = [];
   operationTypes: OperationType[] = [];
   operationForm: FormGroup;
@@ -43,7 +44,7 @@ export class DeviceDetailsComponent implements OnInit {
   }
 
   loadDevice(): void {
-    this.deviceService.getDeviceById(this.deviceId).subscribe({
+    this.deviceService.getById(this.deviceId).subscribe({
       next: (device) => this.device = device,
       error: (err) => console.error('Error fetching device:', err)
     });

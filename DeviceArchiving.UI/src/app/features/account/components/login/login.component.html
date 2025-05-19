@@ -1,0 +1,33 @@
+<div class="login-container">
+  <h2>تسجيل الدخول</h2>
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <div class="form-group full-width">
+      <label for="userName">البريد الإلكتروني</label>
+      <input id="userName" class="form-control" formControlName="userName" type="text" required>
+      <div class="error" *ngIf="loginForm.get('userName')?.hasError('required') && loginForm.get('userName')?.touched">
+        البريد الإلكتروني مطلوب
+      </div>
+      <div class="error" *ngIf="loginForm.get('userName')?.hasError('userName') && loginForm.get('userName')?.touched">
+        غير صالح
+      </div>
+    </div>
+
+    <div class="form-group full-width">
+      <label for="password">كلمة المرور</label>
+      <input id="password" class="form-control" formControlName="password" type="password" required>
+      <div class="error" *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
+        كلمة المرور مطلوبة
+      </div>
+      <div class="error" *ngIf="loginForm.get('password')?.hasError('minlength') && loginForm.get('password')?.touched">
+        يجب أن تكون كلمة المرور 6 أحرف على الأقل
+      </div>
+    </div>
+
+    <button class="submit-btn" type="submit" [disabled]="loading || loginForm.invalid">
+      {{ loading ? 'جارٍ تسجيل الدخول...' : 'تسجيل الدخول' }}
+    </button>
+  </form>
+  <p class="signup-link">
+    ليس لديك حساب؟ <a routerLink="../signup">إنشاء حساب</a>
+  </p>
+</div>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Device } from '../../../../core/models/device.model';
+
 import { Operation } from '../../../../core/models/operation.model';
 import { DeviceService } from '../../../../core/services/device.service';
 import { OperationService } from '../../../../core/services/operation.service';
@@ -7,6 +7,9 @@ import * as XLSX from 'xlsx';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
 import { AddOperationDialogComponent } from '../../../operations/components/add-operation-dialog/add-operation-dialog.component';
+import { DevicesDto } from '../../../../core/models/device.model';
+import { OperationListComponent } from '../../../operations/components/operation-list/operation-list.component';
+
 
 @Component({
   selector: 'app-device-list',
@@ -16,9 +19,9 @@ import { AddOperationDialogComponent } from '../../../operations/components/add-
   providers: [DialogService, MessageService]
 })
 export class DeviceListComponent implements OnInit {
-  devices: Device[] | any[] = [];
-  filteredDevices: Device[] = [];
-  selectedDevice: Device | null = null;
+  devices: DevicesDto[] | any[] = [];
+  filteredDevices: DevicesDto[] = [];
+  selectedDevice: DevicesDto | null = null;
   operations: Operation[] = [];
   globalSearchQuery: string = '';
   searchCriteria = {
@@ -47,11 +50,10 @@ export class DeviceListComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.deviceService.getAllDevices().subscribe(devices => {
-      this.devices = devices.map(device => ({
-        ...device,
-        createdAt: new Date(device.createdAt)
-      }));
+    console.log('DeviceListComponent initialized');
+    // Fetch devices from the service
+    this.deviceService.getAll().subscribe(devices => {
+      this.devices = devices;
       this.filteredDevices = [...this.devices];
       this.deviceTypes = [...new Set(this.devices.map(device => device.type))].map(type => ({
         label: type,
@@ -61,13 +63,43 @@ export class DeviceListComponent implements OnInit {
     });
   }
 
-  selectDevice(device: Device): void {
+  selectDevice(device: DevicesDto): void {
     this.selectedDevice = device;
     this.operationService.getOperationsByDeviceId(device.id!).subscribe((operations) => {
       this.operations = operations;
     });
+
   }
 
+
+  showOperations(device: DevicesDto) {
+    this.selectedDevice = device;
+    if (this.selectedDevice) {
+      console.info('device selected');
+      this.operationService.getOperationsByDeviceId(this.selectedDevice.id!).subscribe(
+        (operations) => {
+          this.operations = operations;
+
+          // Show the operations in a dialog
+          this.dialogRef = this.dialogService.open(OperationListComponent, {
+            header: 'العمليات',
+            width: '100%',
+         
+            contentStyle: { 'direction': 'rtl', 'padding': '1rem' },
+            data: { operations: this.operations } // Pass operations to the dialog
+          });
+        },
+        (error) => {
+          // Handle error appropriately
+          console.error('Error fetching operations:', error);
+          // Optionally show a notification or alert to the user
+        }
+      );
+    } else {
+      console.warn('No device selected');
+      // Optionally show a notification or alert to the user
+    }
+  }
 
 
   applyFilter(): void {
@@ -87,10 +119,12 @@ export class DeviceListComponent implements OnInit {
         (device.source?.toLowerCase().includes(query) || false) ||
         (device.freezePe?.toLowerCase().includes(query) || false) ||
         (device.serialNumber?.toLowerCase().includes(query) || false) ||
+        (device.ؤ?.toLowerCase().includes(query) || false) ||
+        (device.serialNumber?.toLowerCase().includes(query) || false) ||
         (device.code?.toLowerCase().includes(query) || false)
-        (device.card?.toLowerCase().includes(query) || false)
-        (device.type?.toLowerCase().includes(query) || false)
-        (device.createdAt?.toLowerCase().includes(query) || false)
+          (device.card?.toLowerCase().includes(query) || false)
+          (device.type?.toLowerCase().includes(query) || false)
+          (device.createdAt?.toLowerCase().includes(query) || false)
       );
     }
 
@@ -125,7 +159,7 @@ export class DeviceListComponent implements OnInit {
 
   deleteDevice(): void {
     if (this.selectedDevice) {
-      this.deviceService.deleteDevice(this.selectedDevice.id!).subscribe(() => {
+      this.deviceService.delete(this.selectedDevice.id!).subscribe(() => {
         this.devices = this.devices.filter(device => device.id !== this.selectedDevice?.id);
         this.filteredDevices = this.filteredDevices.filter(device => device.id !== this.selectedDevice?.id);
         this.selectedDevice = null;
@@ -138,7 +172,7 @@ export class DeviceListComponent implements OnInit {
 
     //show message `file download` dialog
     this.messageService.add({ severity: 'info', summary: 'جاري التحميل', detail: 'جاري تحميل ملف Excel...' });
-    
+
     // Map filteredDevices to the desired Excel format
     const data = this.filteredDevices.map(device => ({
       'اسم اللاب توب': device.laptopName,
@@ -153,7 +187,6 @@ export class DeviceListComponent implements OnInit {
       'الكود': device.code,
       'الكرت': device.card,
       'تاريخ الإنشاء': device.createdAt.toString(),
-      'الحالة': device.isActive ? 'نشط' : 'غير نشط'
     }));
 
     // Create worksheet from data

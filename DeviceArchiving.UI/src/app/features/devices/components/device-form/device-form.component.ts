@@ -2,19 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DeviceService } from '../../../../core/services/device.service';
-import { Device } from '../../../../core/models/device.model';
-
+import { DevicesDto } from '../../../../core/models/device.model';
+import { CreateDeviceDto } from '../../../../core/models/create-device.model';
 
 @Component({
   selector: 'app-device-form',
   templateUrl: './device-form.component.html',
   styleUrls: ['./device-form.component.css'],
-  standalone:false
+  standalone: false
 })
 export class DeviceFormComponent implements OnInit {
   form: FormGroup;
-  isEditMode = false;
-  deviceId?: number;
+  isEditMode: boolean = false;
+  deviceId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -26,50 +26,99 @@ export class DeviceFormComponent implements OnInit {
       source: ['', Validators.required],
       brotherName: [''],
       laptopName: ['', Validators.required],
-      systemPassword: ['',Validators.required],
-      windowsPassword: ['',Validators.required],
-      hardDrivePassword: ['',Validators.required],
-      freezePassword: ['',Validators.required],
-      code: ['',Validators.required],
+      systemPassword: ['', Validators.required],
+      windowsPassword: ['', Validators.required],
+      hardDrivePassword: ['', Validators.required],
+      freezePassword: ['', Validators.required],
+      code: ['', Validators.required],
       type: ['', Validators.required],
       serialNumber: ['', Validators.required],
-      card: ['',Validators.required],
+      card: ['', Validators.required],
+      comment: [''], // Added missing field
+      contactNumber: [''], // Added missing field
       isActive: [true]
     });
   }
 
   ngOnInit(): void {
-    this.deviceId = +this.route.snapshot.paramMap.get('id')!;
-    if (this.deviceId) {
-      this.isEditMode = true;
-      this.loadDevice();
+    // Check if we're in edit mode by looking for an ID in the route
+    this.deviceId = Number(this.route.snapshot.paramMap.get('id'));
+    this.isEditMode = !!this.deviceId;
+
+    if (this.isEditMode && this.deviceId) {
+      // Fetch device data for editing
+      this.deviceService.getById(this.deviceId).subscribe({
+        next: (device: DevicesDto) => {
+          this.form.patchValue({
+            source: device.source,
+            brotherName: device.brotherName,
+            laptopName: device.laptopName,
+            systemPassword: device.systemPassword,
+            windowsPassword: device.windowsPassword,
+            hardDrivePassword: device.hardDrivePassword,
+            freezePassword: device.freezePassword,
+            code: device.code,
+            type: device.type,
+            serialNumber: device.serialNumber,
+            card: device.card,
+            comment: device.comment || '', // Handle null
+            contactNumber: device.contactNumber || '', // Handle null
+          });
+        },
+
+        error: (err) => {
+          console.error('Error fetching device:', err);
+          // Optionally show a toast notification
+        }
+      });
     }
   }
 
-  loadDevice(): void {
-    this.deviceService.getDeviceById(this.deviceId!).subscribe({
-      next: (device) => this.form.patchValue(device),
-      error: (err) => console.error('Error fetching device:', err)
-    });
-  }
-
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
-    const device: Device = {
-      ...this.form.value,
-      id: this.deviceId
+    const deviceData: CreateDeviceDto = {
+      source: this.form.value.source,
+      brotherName: this.form.value.brotherName,
+      laptopName: this.form.value.laptopName,
+      systemPassword: this.form.value.systemPassword,
+      windowsPassword: this.form.value.windowsPassword,
+      hardDrivePassword: this.form.value.hardDrivePassword,
+      freezePassword: this.form.value.freezePassword,
+      code: this.form.value.code,
+      type: this.form.value.type,
+      serialNumber: this.form.value.serialNumber,
+      card: this.form.value.card,
+      Comment: this.form.value.comment || null,
+      contactNumber: this.form.value.contactNumber || null
+      // Note: userName and createdAt are assumed to be handled by the backend
     };
 
-    if (this.isEditMode) {
-      this.deviceService.updateDevice(device).subscribe({
-        next: () => this.router.navigate(['/devices']),
-        error: (err) => console.error('Error updating device:', err)
+    if (this.isEditMode && this.deviceId) {
+      // Update existing device
+      this.deviceService.update(this.deviceId, deviceData).subscribe({
+        next: () => {
+          this.router.navigate(['/devices']);
+        },
+        error: (err) => {
+          console.error('Error updating device:', err);
+          // Optionally show a toast notification
+        }
       });
     } else {
-      this.deviceService.addDevice(device).subscribe({
-        next: () => this.router.navigate(['/devices']),
-        error: (err) => console.error('Error adding device:', err)
+      // Create new device
+      this.deviceService.create(deviceData).subscribe({
+        next: () => {
+          this.router.navigate(['/devices']);
+        },
+        error: (err) => {
+          console.error('Error creating device:', err);
+          // Optionally show a toast notification
+          
+        }
       });
     }
   }

@@ -1,5 +1,7 @@
-export interface Device {
-  id?: number; 
+
+
+export interface DevicesDto {
+  id: number;
   source: string;
   brotherName: string;
   laptopName: string;
@@ -10,7 +12,22 @@ export interface Device {
   code: string;
   type: string;
   serialNumber: string;
+  comment?: string;
+  contactNumber?: string;
   card: string;
-  isActive: boolean;
+  userName: string;
   createdAt: string;
+}
+
+export interface OperationDto {
+  operationName: string;
+  oldValue?: string;
+  newValue?: string;
+  comment?: string;
+  createdAt: string;
+  userName: string;
+}
+
+export interface DeviceDto extends DevicesDto {
+  operationsDtos: OperationDto[];
 }

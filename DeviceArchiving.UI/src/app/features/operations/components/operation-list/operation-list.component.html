@@ -1,0 +1,68 @@
+<p-toast position="top-center"></p-toast>
+<div class="operation-list-container" dir="rtl">
+  <div class="table-container">
+    <p-table
+      [value]="operations"
+      [tableStyle]="{'min-width': '100%'}"
+      sortMode="single"
+      styleClass="p-datatable-gridlines p-datatable-striped"
+      [rowHover]="true"
+      [showCurrentPageReport]="true"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="operationName">
+            اسم العملية <p-sortIcon field="operationName" />
+            <p-columnFilter type="text" field="operationName" display="menu"></p-columnFilter>
+          </th>
+          <th pSortableColumn="oldValue">
+            القيمة القديمة <p-sortIcon field="oldValue" />
+            <p-columnFilter type="text" field="oldValue" display="menu"></p-columnFilter>
+          </th>
+          <th pSortableColumn="newValue">
+            القيمة الجديدة <p-sortIcon field="newValue" />
+            <p-columnFilter type="text" field="newValue" display="menu"></p-columnFilter>
+          </th>
+          <th pSortableColumn="comment">
+            ملاحظة <p-sortIcon field="comment" />
+            <p-columnFilter type="text" field="comment" display="menu"></p-columnFilter>
+          </th>
+          <th pSortableColumn="userName">
+            تم بواسطة <p-sortIcon field="userName" />
+            <p-columnFilter type="text" field="userName" display="menu"></p-columnFilter>
+          </th>
+          <th pSortableColumn="createdAt">
+            تاريخ الإنشاء <p-sortIcon field="createdAt" />
+            <p-columnFilter type="date" field="createdAt" display="menu"></p-columnFilter>
+          </th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-operation>
+        <tr>
+          <td>{{ operation.operationName }}</td>
+          <td>{{ operation.oldValue || '-' }}</td>
+          <td>{{ operation.newValue || '-' }}</td>
+          <td>{{ operation.comment || '-' }}</td>
+          <td>{{ operation.userName }}</td>
+          <td>{{ operation.createdAt | date: 'short' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="summary">
+        <div class="flex align-items-center justify-content-between">
+          إجمالي عدد العمليات هو {{ operations ? operations.length : 0 }} عملية.
+        </div>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Close Button -->
+  <div class="button-container">
+    <p-button
+      label="إغلاق"
+      icon="pi pi-times"
+      (click)="closeDialog()"
+      styleClass="p-button-secondary"
+    />
+  </div>
+</div>

@@ -1,17 +1,15 @@
-﻿using DeviceArchiving.Data.Entities;
+﻿using DeviceArchiving.Data.Dto.Devices;
+using DeviceArchiving.Data.Entities;
 
-namespace DeviceArchiving.Service
+namespace DeviceArchiving.Service;
+
+public interface IDeviceService
 {
-    public interface IDeviceService
-    {
-        void AddDevice(Device device);
-        IEnumerable<Device> GetAllDevices();
-        void UpdateDevice(Device device);
-        void DeleteDevice(int id);
-        
-
-    }
-
+    Task AddDeviceAsync(CreateDeviceDto dto);
+    Task<List<GetAllDevicesDto>> GetAllDevicesAsync();
+    Task<GetDeviceDto?> GetDeviceByIdAsync(int id);
+    Task UpdateDeviceAsync(int id, UpdateDeviceDto dto);
+    Task DeleteDeviceAsync(int id);
 }
 
 

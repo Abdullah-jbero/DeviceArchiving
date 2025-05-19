@@ -1,4 +1,5 @@
 ﻿using DeviceArchiving.Data.Contexts;
+using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Data.Entities;
 using DeviceArchiving.Service;
 using Microsoft.EntityFrameworkCore;
@@ -6,189 +7,157 @@ using Microsoft.EntityFrameworkCore;
 namespace DeviceArchiving.Service;
 public class DeviceService(DeviceArchivingContext context) : IDeviceService
 {
-    public void AddDevice(Device device)
+    public async Task AddDeviceAsync(CreateDeviceDto dto)
     {
-        context.Devices.Add(device);
-        context.SaveChanges();
-    }
-
-
-    public IEnumerable<Device> GetAllDevices()
-    {
-        return context.Devices.ToList();
-    }
-
-    public Device? GetDeviceById(int id)
-    {
-        var device = context.Devices.FirstOrDefault(d => d.Id == id);
-        return device;
-    }
-
-    public void DeleteDevice(int id)
-    {
-        var device = GetDeviceById(id);
-        if (device != null)
+        var device = new Device
         {
-            device.IsActive = false;
-            context.Devices.Update(device);
-            context.SaveChanges();
-        }
+            Source = dto.Source,
+            BrotherName = dto.BrotherName,
+            LaptopName = dto.LaptopName,
+            SystemPassword = dto.SystemPassword,
+            WindowsPassword = dto.WindowsPassword,
+            HardDrivePassword = dto.HardDrivePassword,
+            FreezePassword = dto.FreezePassword,
+            Code = dto.Code,
+            Type = dto.Type,
+            SerialNumber = dto.SerialNumber,
+            Card = dto.Card,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
 
+        context.Devices.Add(device);
+        await context.SaveChangesAsync();
     }
 
-    public void UpdateDevice(Device device)
+    public async Task<List<GetAllDevicesDto>> GetAllDevicesAsync()
     {
-        var existingDevice = context.Devices.Find(device.Id);
-        if (existingDevice == null) throw new Exception("الجهاز غير موجود");
+        return await context.Devices
+            .Where(d => d.IsActive)
+            .Include(d => d.User)
+            .Select(d => new GetAllDevicesDto
+            {
+                Id = d.Id,
+                Source = d.Source,
+                BrotherName = d.BrotherName,
+                LaptopName = d.LaptopName,
+                SystemPassword = d.SystemPassword,
+                WindowsPassword = d.WindowsPassword,
+                HardDrivePassword = d.HardDrivePassword,
+                FreezePassword = d.FreezePassword,
+                Code = d.Code,
+                Type = d.Type,
+                SerialNumber = d.SerialNumber,
+                Comment = d.Comment,
+                ContactNumber = d.ContactNumber,
+                Card = d.Card,
+                UserName = d.User.UserName
+            })
+            .ToListAsync();
+    }
+
+
+    public async Task<GetDeviceDto?> GetDeviceByIdAsync(int id)
+    {
+        return await context.Devices
+            .Where(d => d.Id == id)
+            .Include(d=>d.User)
+            .Include(d=>d.Operations)
+            .Select(d => new GetDeviceDto
+            {
+                Id = d.Id,
+                Source = d.Source,
+                BrotherName = d.BrotherName,
+                LaptopName = d.LaptopName,
+                SystemPassword = d.SystemPassword,
+                WindowsPassword = d.WindowsPassword,
+                HardDrivePassword = d.HardDrivePassword,
+                FreezePassword = d.FreezePassword,
+                Code = d.Code,
+                Type = d.Type,
+                SerialNumber = d.SerialNumber,
+                Comment = d.Comment,
+                ContactNumber = d.ContactNumber,
+                Card = d.Card,
+                UserName = d.User.UserName,
+                OperationsDtos = d.Operations.Select(o => new OperationDto
+                {
+                    OperationName = o.OperationName,
+                    OldValue = o.OldValue,
+                    NewValue = o.NewValue,
+                    Comment = o.Comment,
+                    CreatedAt = o.CreatedAt,
+                    UserName = d.User.UserName
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+    }
+
+
+    public async Task DeleteDeviceAsync(int id)
+    {
+        var device = await context.Devices.FindAsync(id);
+        if (device is null)
+            throw new KeyNotFoundException($"الجهاز بالمعرف {id} غير موجود.");
+
+        device.IsActive = false;
+        device.UpdatedAt = DateTime.Now;
+        context.Devices.Update(device);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task UpdateDeviceAsync(int id, UpdateDeviceDto dto)
+    {
+        var device = await context.Devices.FindAsync(id);
+        if (device == null)
+            throw new KeyNotFoundException("الجهاز غير موجود");
 
         var operations = new List<Operation>();
 
-        if (existingDevice.Source != device.Source)
+        TrackChange(operations, device, d => d.Source, dto.Source, id, "تحديث الجهة");
+        TrackChange(operations, device, d => d.BrotherName, dto.BrotherName, id, "تحديث اسم الأخ");
+        TrackChange(operations, device, d => d.LaptopName, dto.LaptopName, id, "تحديث اسم اللابتوب");
+        TrackChange(operations, device, d => d.SystemPassword, dto.SystemPassword, id, "تحديث كلمة سر النظام");
+        TrackChange(operations, device, d => d.WindowsPassword, dto.WindowsPassword, id, "تحديث كلمة سر الويندوز");
+        TrackChange(operations, device, d => d.HardDrivePassword, dto.HardDrivePassword, id, "تحديث كلمة سر الهارد");
+        TrackChange(operations, device, d => d.FreezePassword, dto.FreezePassword, id, "تحديث كلمة التجميد");
+        TrackChange(operations, device, d => d.Code, dto.Code, id, "تحديث الكود");
+        TrackChange(operations, device, d => d.Type, dto.Type, id, "تحديث النوع");
+        TrackChange(operations, device, d => d.SerialNumber, dto.SerialNumber, id, "تحديث رقم السيريال");
+        TrackChange(operations, device, d => d.Card, dto.Card, id, "تحديث الكرت");
+
+        device.UpdatedAt = DateTime.UtcNow;
+
+        context.Devices.Update(device);
+        if (operations.Any())
+        {
+            context.Operations.AddRange(operations);
+        }
+
+        await context.SaveChangesAsync();
+    }   
+    private void TrackChange(List<Operation> operations, Device device, Func<Device, string?> selector, string? newValue, int deviceId, string operationName)
+    {
+        var oldValue = selector(device);
+        if (oldValue != newValue)
         {
             operations.Add(new Operation
             {
-                DeviceId = device.Id,
-                OperationName = "تحديث الجهة",
-                oldValue = existingDevice.Source,
-                newValue = device.Source,
-                CreatedAt = DateTime.UtcNow
+                DeviceId = deviceId,
+                OperationName = operationName,
+                OldValue = oldValue,
+                NewValue = newValue,
+                CreatedAt = DateTime.Now
             });
-            existingDevice.Source = device.Source;
-        }
 
-        if (existingDevice.BrotherName != device.BrotherName)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث اسم الأخ",
-                oldValue = existingDevice.BrotherName,
-                newValue = device.BrotherName,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.BrotherName = device.BrotherName;
-        }
+            // Set new value using reflection
+            var property = typeof(Device).GetProperties()
+                .FirstOrDefault(p => p.GetMethod?.Invoke(device, null)?.ToString() == oldValue);
 
-        if (existingDevice.LaptopName != device.LaptopName)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث اسم اللابتوب",
-                oldValue = existingDevice.LaptopName,
-                newValue = device.LaptopName,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.LaptopName = device.LaptopName;
+            if (property != null && property.CanWrite)
+                property.SetValue(device, newValue);
         }
-
-        if (existingDevice.SystemPassword != device.SystemPassword)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث كلمة سر النظام",
-                oldValue = existingDevice.SystemPassword,
-                newValue = device.SystemPassword,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.SystemPassword = device.SystemPassword;
-        }
-
-        if (existingDevice.WindowsPassword != device.WindowsPassword)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث كلمة سر الويندوز",
-                oldValue = existingDevice.WindowsPassword,
-                newValue = device.WindowsPassword,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.WindowsPassword = device.WindowsPassword;
-        }
-
-        if (existingDevice.HardDrivePassword != device.HardDrivePassword)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث كلمة سر الهارد",
-                oldValue = existingDevice.HardDrivePassword,
-                newValue = device.HardDrivePassword,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.HardDrivePassword = device.HardDrivePassword;
-        }
-
-        if (existingDevice.FreezePassword != device.FreezePassword)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث كلمة التجميد",
-                oldValue = existingDevice.FreezePassword,
-                newValue = device.FreezePassword,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.FreezePassword = device.FreezePassword;
-        }
-
-        if (existingDevice.Code != device.Code)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث الكود",
-                oldValue = existingDevice.Code,
-                newValue = device.Code,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.Code = device.Code;
-        }
-
-        if (existingDevice.Type != device.Type)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث النوع",
-                oldValue = existingDevice.Type,
-                newValue = device.Type,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.Type = device.Type;
-        }
-
-        if (existingDevice.SerialNumber != device.SerialNumber)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث رقم السيريال",
-                oldValue = existingDevice.SerialNumber,
-                newValue = device.SerialNumber,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.SerialNumber = device.SerialNumber;
-        }
-
-        if (existingDevice.Card != device.Card)
-        {
-            operations.Add(new Operation
-            {
-                DeviceId = device.Id,
-                OperationName = "تحديث الكرت",
-                oldValue = existingDevice.Card,
-                newValue = device.Card,
-                CreatedAt = DateTime.UtcNow
-            });
-            existingDevice.Card = device.Card;
-        }
-
-        // save the changes 
-        context.Devices.Update(existingDevice);
-        context.Operations.AddRange(operations);
-        context.SaveChanges();
     }
+
+
 }

@@ -1,71 +1,77 @@
+using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Data.Entities;
 using DeviceArchiving.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace DeviceArchiving.Api.Controllers;
 
-[Route("api/[controller]")]
 [ApiController]
+[Route("api/[controller]")]
 [Authorize]
 public class DevicesController : ControllerBase
 {
-    private readonly IDeviceService deviceService;
+    private readonly IDeviceService _deviceService;
 
     public DevicesController(IDeviceService deviceService)
     {
-        this.deviceService = deviceService;
+        _deviceService = deviceService;
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Device>> GetDevices()
+    public async Task<ActionResult<List<GetAllDevicesDto>>> GetAll()
     {
-        var devices = deviceService.GetAllDevices();
+        var devices = await _deviceService.GetAllDevicesAsync();
         return Ok(devices);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Device>> GetDevice(int id)
+    public async Task<ActionResult<GetDeviceDto>> GetById(int id)
     {
-        var device = deviceService.GetAllDevices().FirstOrDefault(d => d.Id == id);
-        if (device == null) return NotFound();
-        return device;
+        var device = await _deviceService.GetDeviceByIdAsync(id);
+        if (device == null)
+            return NotFound();
+
+        return Ok(device);
     }
 
     [HttpPost]
-    public ActionResult<Device> PostDevice(Device device)
+    public async Task<IActionResult> Create([FromBody] CreateDeviceDto dto)
     {
-        deviceService.AddDevice(device);
-        return CreatedAtAction(nameof(GetDevice), new { id = device.Id }, device);
+        await _deviceService.AddDeviceAsync(dto);
+        return Ok();
     }
 
     [HttpPut("{id}")]
-    public IActionResult PutDevice(int id, Device device)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateDeviceDto dto)
     {
-        if (id != device.Id) return BadRequest();
-
         try
         {
-            deviceService.UpdateDevice(device);
+            await _deviceService.UpdateDeviceAsync(id, dto);
+            return NoContent();
         }
         catch (KeyNotFoundException)
         {
             return NotFound();
         }
-        return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public IActionResult DeleteDevice(int id)
+    public async Task<IActionResult> Delete(int id)
     {
         try
         {
-            deviceService.DeleteDevice(id);
+            await _deviceService.DeleteDeviceAsync(id);
+            return NoContent();
         }
         catch (KeyNotFoundException)
         {
             return NotFound();
         }
-        return NoContent();
+        catch (Exception)
+        {
+            return StatusCode(500, "Internal server error");
+        }
     }
 }

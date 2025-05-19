@@ -11,6 +11,14 @@ public class DeviceArchivingContext : DbContext
     public DeviceArchivingContext(DbContextOptions<DeviceArchivingContext> options) : base(options) { }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
- 
+        modelBuilder.Entity<Operation>()
+                   .HasOne(o => o.User)
+                   .WithMany()
+                   .HasForeignKey(o => o.UserId)
+                   .OnDelete(DeleteBehavior.NoAction);
+
+
+        modelBuilder.Entity<Device>()
+            .HasQueryFilter(d => d.IsActive == true);
     }
 }

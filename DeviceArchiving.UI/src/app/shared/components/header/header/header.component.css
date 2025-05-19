@@ -1,7 +1,7 @@
 /* Ensure RTL direction and Arabic font */
 :host {
   direction: rtl;
-  font-family: 'Noto Sans Arabic', 'Roboto', sans-serif;
+  font-family: "Noto Sans Arabic", "Roboto", sans-serif;
 }
 .app-header {
   background: linear-gradient(90deg, #1976d2, #42a5f5);
@@ -55,6 +55,9 @@
   padding: 0 8px;
   border-radius: 4px;
   transition: background-color 0.3s ease;
+
+  justify-content: center;
+  align-items: center;
 }
 .app-header .user-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
@@ -65,10 +68,11 @@
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid #ffffff;
+  margin: 0 0 0 30px;
 }
 .app-header .user-button .user-name {
-  font-size: 0.875rem;
-  font-weight: 400;
+  font-size: 2rem;
+  font-weight: 500;
 }
 .app-header .user-button mat-icon {
   font-size: 20px;

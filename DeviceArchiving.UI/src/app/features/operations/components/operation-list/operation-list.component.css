@@ -1,0 +1,38 @@
+.operation-list-container {
+  padding: 1rem;
+  direction: rtl;
+}
+
+.table-container {
+  margin-bottom: 1rem;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* Ensure table is responsive */
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th,
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  text-align: right;
+  padding: 0.5rem;
+}
+
+/* Style for striped table */
+:host ::ng-deep .p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* Hover effect */
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #e9ecef;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+  }
+}

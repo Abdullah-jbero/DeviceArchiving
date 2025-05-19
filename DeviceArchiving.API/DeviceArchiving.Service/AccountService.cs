@@ -1,5 +1,6 @@
 ﻿using DeviceArchiving.Data.Contexts;
 using DeviceArchiving.Data.Dto;
+using DeviceArchiving.Data.Dto.Users;
 using DeviceArchiving.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -21,25 +22,35 @@ namespace DeviceArchiving.Service
             _jwtSettings = jwtOptions.Value;
         }
 
-        public async Task<BaseResponse<string>> AuthenticateAsync(AuthenticationRequest request)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public async Task<BaseResponse<AuthenticationResponse>> AuthenticateAsync(AuthenticationRequest request)
         {
             try
             {
-                var email = request.Email.Trim().ToLower();
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+                var email = request.UserName.Trim().ToLower();
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName.ToLower() == email);
 
                 if (user == null)
-                    return BaseResponse<string>.Failure($"User with email '{request.Email}' not found.");
+                    return BaseResponse<AuthenticationResponse>.Failure($"User with email '{request.UserName}' not found.");
 
                 if (!VerifyPassword(request.Password, user.Password))
-                    return BaseResponse<string>.Failure("Invalid credentials.");
+                    return BaseResponse<AuthenticationResponse>.Failure("Invalid credentials.");
+
 
                 var token = GenerateJwtToken(user);
-                return BaseResponse<string>.SuccessResult(new JwtSecurityTokenHandler().WriteToken(token), "Authenticated successfully.");
+                var respone = AuthenticationResponse.FromUser(user, new JwtSecurityTokenHandler().WriteToken(token));
+                return BaseResponse<AuthenticationResponse>.SuccessResult(
+                    respone,
+                    "Authenticated successfully.");
             }
             catch (Exception ex)
             {
-                return BaseResponse<string>.Failure($"Authentication error: {ex.Message}");
+                return BaseResponse<AuthenticationResponse>.Failure($"Authentication error: {ex.Message}");
             }
         }
 
@@ -47,15 +58,15 @@ namespace DeviceArchiving.Service
         {
             try
             {
-                var email = request.Email.Trim().ToLower();
-                var exists = await _context.Users.AnyAsync(u => u.Email.ToLower() == email);
+                var email = request.UserName.Trim().ToLower();
+                var exists = await _context.Users.AnyAsync(u => u.UserName.ToLower() == email);
 
                 if (exists)
-                    return BaseResponse<string>.Failure($"Email '{request.Email}' is already in use.");
+                    return BaseResponse<string>.Failure($"UserName '{request.UserName}' is already in use.");
 
                 var newUser = new User
                 {
-                    Email = email,
+                    UserName = email,
                     Password = HashPassword(request.Password)
                 };
 
@@ -75,8 +86,8 @@ namespace DeviceArchiving.Service
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.GivenName, user.Email)
+                new Claim(ClaimTypes.Email, user.UserName),
+                new Claim(ClaimTypes.GivenName, user.UserName)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));

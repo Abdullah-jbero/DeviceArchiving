@@ -1,6 +1,7 @@
 ﻿using DeviceArchiving.Service;
 using Microsoft.AspNetCore.Mvc;
 using DeviceArchiving.Data.Dto;
+using DeviceArchiving.Data.Dto.Users;
 
 namespace WebApi.Controllers
 {
@@ -15,13 +16,15 @@ namespace WebApi.Controllers
             _accountService = accountService;
         }
 
+
+
         [HttpPost("authenticate")]
         [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> AuthenticateAsync([FromBody] AuthenticationRequest request)
+        public async Task<ActionResult<BaseResponse<AuthenticationResponse>>> AuthenticateAsync([FromBody] AuthenticationRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(BaseResponse<string>.Failure("Invalid request"));
+                return BadRequest(BaseResponse<AuthenticationResponse>.Failure("Invalid request"));
 
             var response = await _accountService.AuthenticateAsync(request);
             return response.Success ? Ok(response) : Unauthorized(response);

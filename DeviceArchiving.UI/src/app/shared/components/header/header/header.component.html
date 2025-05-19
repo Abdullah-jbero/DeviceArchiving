@@ -1,1 +1,46 @@
-<p>header works!</p>
+<mat-toolbar color="primary" class="app-header" dir="rtl">
+  <!-- Left: App title/logo -->
+  <span class="app-title">تطبيقي</span>
+
+  <!-- Center: Navigation links (authenticated users) -->
+  <span class="spacer"></span>
+  <nav *ngIf="accountService.isAuthenticated()">
+    <a
+      mat-button
+      *ngFor="let page of pages"
+      [routerLink]="page.route"
+      routerLinkActive="active-link"
+      [routerLinkActiveOptions]="{ exact: false }"
+      matRipple
+    >
+      {{ page.label }}
+    </a>
+  </nav>
+
+  <!-- Center: Login/Signup links (unauthenticated users) -->
+  <nav *ngIf="!accountService.isAuthenticated()">
+    <a mat-button routerLink="/account/login" routerLinkActive="active-link" matRipple>
+      تسجيل الدخول
+    </a>
+    <a mat-button routerLink="/account/signup" routerLinkActive="active-link" matRipple>
+      إنشاء حساب
+    </a>
+  </nav>
+
+  <!-- Right: User menu (authenticated users) -->
+  <span class="spacer"></span>
+  <div *ngIf="accountService.isAuthenticated()">
+    <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
+      <img class="avatar" [src]="pictureUrl" alt="صورة المستخدم" />
+      <span class="user-name">{{ userName }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>exit_to_app</mat-icon>
+        <span>تسجيل الخروج</span>
+      </button>
+    </mat-menu>
+  </div>
+</mat-toolbar>

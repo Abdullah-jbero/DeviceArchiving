@@ -1,89 +1,100 @@
-<div class="form-container">
+<div class="form-container" dir="rtl">
   <h2>{{ isEditMode ? 'تعديل جهاز' : 'إضافة جهاز' }}</h2>
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="device-form">
     <div class="form-columns">
       <div class="form-column">
         <div class="form-group">
           <label for="source">الجهة:</label>
-          <input id="source" formControlName="source" required />
+          <input id="source" formControlName="source" pInputText />
           <div class="error" *ngIf="form.get('source')?.invalid && form.get('source')?.touched">
             الجهة مطلوبة.
           </div>
         </div>
         <div class="form-group">
           <label for="brotherName">اسم الأخ:</label>
-          <input id="brotherName" formControlName="brotherName" />
+          <input id="brotherName" formControlName="brotherName" pInputText />
         </div>
         <div class="form-group">
           <label for="laptopName">اسم اللابتوب:</label>
-          <input id="laptopName" formControlName="laptopName" required />
+          <input id="laptopName" formControlName="laptopName" pInputText />
           <div class="error" *ngIf="form.get('laptopName')?.invalid && form.get('laptopName')?.touched">
             اسم اللابتوب مطلوب.
           </div>
         </div>
         <div class="form-group">
           <label for="systemPassword">كلمة سر النظام:</label>
-          <input id="systemPassword" formControlName="systemPassword" type="password" />
+          <input id="systemPassword" formControlName="systemPassword" userNamepInputText />
           <div class="error" *ngIf="form.get('systemPassword')?.invalid && form.get('systemPassword')?.touched">
             كلمة سر النظام مطلوبة.
           </div>
         </div>
         <div class="form-group">
           <label for="windowsPassword">كلمة سر الويندوز:</label>
-          <input id="windowsPassword" formControlName="windowsPassword" type="password" />
+          <input id="windowsPassword" formControlName="windowsPassword" userNamepInputText />
           <div class="error" *ngIf="form.get('windowsPassword')?.invalid && form.get('windowsPassword')?.touched">
             كلمة سر الويندوز مطلوبة.
           </div>
         </div>
-      </div>
-      <div class="form-column">
+        <div class="form-group">
+          <label for="contactNumber">رقم التواصل:</label>
+          <input id="contactNumber" formControlName="contactNumber" pInputText />
+        </div>
         <div class="form-group">
           <label for="hardDrivePassword">كلمة سر الهارد:</label>
-          <input id="hardDrivePassword" formControlName="hardDrivePassword" type="password" />
+          <input id="hardDrivePassword" formControlName="hardDrivePassword" userNamepInputText />
           <div class="error" *ngIf="form.get('hardDrivePassword')?.invalid && form.get('hardDrivePassword')?.touched">
             كلمة سر الهارد مطلوبة.
           </div>
         </div>
+      </div>
+      <div class="form-column">
+
         <div class="form-group">
           <label for="freezePassword">كلمة سر التجميد:</label>
-          <input id="freezePassword" formControlName="freezePassword" type="password" />
+          <input id="freezePassword" formControlName="freezePassword" userNamepInputText />
           <div class="error" *ngIf="form.get('freezePassword')?.invalid && form.get('freezePassword')?.touched">
             كلمة سر التجميد مطلوبة.
           </div>
         </div>
         <div class="form-group">
           <label for="code">الكود:</label>
-          <input id="code" formControlName="code" />
+          <input id="code" formControlName="code" pInputText />
           <div class="error" *ngIf="form.get('code')?.invalid && form.get('code')?.touched">
             الكود مطلوب.
           </div>
         </div>
         <div class="form-group">
           <label for="type">النوع:</label>
-          <input id="type" formControlName="type" required />
+          <input id="type" formControlName="type" pInputText />
           <div class="error" *ngIf="form.get('type')?.invalid && form.get('type')?.touched">
             النوع مطلوب.
           </div>
         </div>
         <div class="form-group">
           <label for="serialNumber">رقم السيريال:</label>
-          <input id="serialNumber" formControlName="serialNumber" required />
+          <input id="serialNumber" formControlName="serialNumber" pInputText />
           <div class="error" *ngIf="form.get('serialNumber')?.invalid && form.get('serialNumber')?.touched">
             رقم السيريال مطلوب.
           </div>
         </div>
         <div class="form-group">
           <label for="card">الكرت:</label>
-          <input id="card" formControlName="card" />
+          <input id="card" formControlName="card" pInputText />
           <div class="error" *ngIf="form.get('card')?.invalid && form.get('card')?.touched">
             الكرت مطلوب.
           </div>
         </div>
+
+
+        <div class="form-group">
+          <label for="comment">ملاحظة:</label>
+          <textarea id="comment" formControlName="comment" pInputTextarea rows="4"></textarea>
+        </div>
       </div>
     </div>
     <div class="form-actions">
-      <button type="submit" [disabled]="form.invalid" class="submit-button">حفظ</button>
-      <a routerLink="/devices" class="cancel-button">إلغاء</a>
+      <p-button type="submit" label="حفظ" [disabled]="form.invalid" styleClass="p-button-success"></p-button>
+      <p-button label="إلغاء" styleClass="p-button-secondary" [routerLink]="['/devices']"></p-button>
     </div>
   </form>
 </div>
