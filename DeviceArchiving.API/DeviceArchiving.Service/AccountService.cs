@@ -32,11 +32,11 @@ namespace DeviceArchiving.Service
         {
             try
             {
-                var email = request.UserName.Trim().ToLower();
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName.ToLower() == email);
+                var userName = request.UserName.Trim().ToLower();
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName.ToLower() == userName);
 
                 if (user == null)
-                    return BaseResponse<AuthenticationResponse>.Failure($"User with email '{request.UserName}' not found.");
+                    return BaseResponse<AuthenticationResponse>.Failure($"User'{request.UserName}' not found.");
 
                 if (!VerifyPassword(request.Password, user.Password))
                     return BaseResponse<AuthenticationResponse>.Failure("Invalid credentials.");
@@ -97,7 +97,7 @@ namespace DeviceArchiving.Service
                 issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.DurationInMinutes),
+                expires: DateTime.Now.AddDays(_jwtSettings.DurationInDays),
                 signingCredentials: creds
             );
         }

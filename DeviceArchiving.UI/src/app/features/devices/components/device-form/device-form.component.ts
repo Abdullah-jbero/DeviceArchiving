@@ -15,6 +15,7 @@ export class DeviceFormComponent implements OnInit {
   form: FormGroup;
   isEditMode: boolean = false;
   deviceId: number | null = null;
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
@@ -79,7 +80,7 @@ export class DeviceFormComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-
+    this.loading = true;
     const deviceData: CreateDeviceDto = {
       source: this.form.value.source,
       brotherName: this.form.value.brotherName,
@@ -92,7 +93,7 @@ export class DeviceFormComponent implements OnInit {
       type: this.form.value.type,
       serialNumber: this.form.value.serialNumber,
       card: this.form.value.card,
-      Comment: this.form.value.comment || null,
+      comment: this.form.value.comment || null,
       contactNumber: this.form.value.contactNumber || null
       // Note: userName and createdAt are assumed to be handled by the backend
     };
@@ -105,6 +106,7 @@ export class DeviceFormComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error updating device:', err);
+          this.loading = true;
           // Optionally show a toast notification
         }
       });
@@ -116,8 +118,9 @@ export class DeviceFormComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error creating device:', err);
+          this.loading = true;
           // Optionally show a toast notification
-          
+
         }
       });
     }

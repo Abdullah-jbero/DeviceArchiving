@@ -6,6 +6,8 @@
   font-family: Arial, sans-serif;
 }
 
+
+
 .search-form {
   margin-bottom: 20px;
 }
@@ -92,6 +94,29 @@
   margin-top: 20px;
 }
 
+.spinner-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8); /* Optional: semi-transparent overlay */
+  z-index: 1000; /* Ensure it appears above other content */
+}
+
+:host ::ng-deep .p-progressSpinner {
+  width: 50px;
+  height: 50px;
+}
+
+
+
+
+
+
 /* تصميم متجاوب */
 @media (max-width: 768px) {
   .content-wrapper {
@@ -110,5 +135,6 @@
 
 ::ng-deep .selected-row {
   background-color: #87CEEB !important;
-  color: #000 !important; /* لون النص أسود */
+  color: #000 !important; 
 }
+

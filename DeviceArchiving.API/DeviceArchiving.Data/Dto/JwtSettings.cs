@@ -20,5 +20,5 @@ public class JwtSettings
     /// <summary>
     /// Duration in minutes the JWT is valid for.
     /// </summary>
-    public int DurationInMinutes { get; set; }
+    public int DurationInDays { get; set; }
 }

@@ -44,13 +44,16 @@ export class LoginComponent {
       next: (response: BaseResponse<AuthenticationResponse>) => {
         this.loading = false;
         if (response.success) {
-          const base64Image = `data:image/png;base64,${response.data.picture}`;
+          const base64Image = response.data.picture.length > 1
+            ? `data:image/png;base64,${response.data.picture}`
+            : '';
 
           this.accountService.saveUserInfo(
             response.data.token,
             response.data.userName,
             base64Image
           );
+
 
           this.snackBar.open('Login successful!', 'Close', { duration: 3000 });
           this.router.navigate(['/devices']);

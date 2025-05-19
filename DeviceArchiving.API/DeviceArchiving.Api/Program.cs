@@ -1,4 +1,5 @@
-﻿using DeviceArchiving.Data.Contexts;
+﻿using DeviceArchiving.Data;
+using DeviceArchiving.Data.Contexts;
 using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,21 +22,39 @@ services.AddSwaggerGen();
 services.AddScoped<IDeviceService, DeviceService>();
 services.AddScoped<IOperationService, OperationService>();
 services.AddScoped<IOperationTypeService, OperationTypeService>();
-services.AddScoped<IAccountService, AccountService>(); // Optional, in case you missed it
+services.AddScoped<IAccountService, AccountService>();
 
-// 🌐 CORS
-services.AddCors(options =>
+
+
+// 🗄️ Database (SQLite or SQL Server based on configuration)
+services.AddHttpContextAccessor();
+services.AddScoped<UserIdInterceptor>();
+services.AddDbContext<DeviceArchivingContext>((serviceProvider, options) =>
 {
-    options.AddPolicy("AllowAllOrigins", policy =>
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader());
+    var userIdInterceptor = serviceProvider.GetRequiredService<UserIdInterceptor>();
+    var dbProvider = configuration.GetValue<string>("DatabaseProvider")?.ToLower();
+
+    var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+    }
+
+    switch (dbProvider)
+    {
+        case "sqlite":
+            options.UseSqlite(connectionString);
+            break;
+        case "sqlserver":
+            options.UseSqlServer(connectionString);
+            break;
+        default:
+            throw new InvalidOperationException("Invalid or missing 'DatabaseProvider' in configuration. Use 'sqlite' or 'sqlserver'.");
+    }
+
+    options.AddInterceptors(userIdInterceptor);
 });
-
-// 🗄️ Database
-services.AddDbContext<DeviceArchivingContext>(options =>
-    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
 
 // Bind JwtSettings
 services.Configure<JwtSettings>(
@@ -60,11 +79,35 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 var app = builder.Build();
 
+// ⚙️ Apply Migrations in Production
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DeviceArchivingContext>();
+    try
+    {
+        // Apply any pending migrations
+        dbContext.Database.Migrate();
+        app.Logger.LogInformation("Database migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred while applying database migrations.");
+        throw; // Optionally, stop the application if migrations fail
+    }
+}
+
 // ⚙️ Middleware
-app.UseCors("AllowAllOrigins");
+
+//This middleware registers a custom error handler middleware to handle exceptions in the application
+app.UseCors(policy => policy
+    .WithOrigins("http://localhost:6027") // الأصل المسموح فقط
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .AllowCredentials()
+    .WithExposedHeaders("x-pagination", "Authorization"));
+
 
 app.UseSwagger();
 app.UseSwaggerUI();

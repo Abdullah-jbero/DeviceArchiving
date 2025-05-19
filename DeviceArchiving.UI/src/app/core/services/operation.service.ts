@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Operation } from '../models/operation.model';
+import { CreateOperation, Operation } from '../models/operation.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -16,7 +16,7 @@ export class OperationService {
     return this.http.get<Operation[]>(`${this.apiUrl}/drive/${deviceId}`);
   }
 
-  addOperation(operation: Operation): Observable<Operation> {
-    return this.http.post<Operation>(this.apiUrl, operation);
+  addOperation(operation: CreateOperation): Observable<CreateOperation> {
+    return this.http.post<CreateOperation>(this.apiUrl, operation);
   }
 }

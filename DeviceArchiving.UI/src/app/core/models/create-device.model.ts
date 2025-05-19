@@ -11,7 +11,7 @@ export interface CreateDeviceDto {
     code: string;
     type: string;
     serialNumber: string;
-    Comment: string | null;
+    comment: string | null;
     contactNumber: string | null;
     card: string;
 }

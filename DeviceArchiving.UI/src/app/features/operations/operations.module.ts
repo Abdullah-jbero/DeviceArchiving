@@ -8,7 +8,7 @@ import { AddOperationDialogComponent } from './components/add-operation-dialog/a
 import { OperationListComponent } from './components/operation-list/operation-list.component';
 
 @NgModule({
-  declarations: [AddOperationDialogComponent, OperationListComponent],
-  imports: [CommonModule,  SharedModule]
+  declarations: [AddOperationDialogComponent],
+  imports: [CommonModule,  SharedModule],
 })
 export class OperationsModule {}

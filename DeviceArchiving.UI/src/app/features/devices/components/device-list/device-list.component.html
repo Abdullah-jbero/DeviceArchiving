@@ -1,5 +1,12 @@
 <p-toast position="top-center"></p-toast>
-<div class="container" dir="rtl">
+<!-- Loading spinner -->
+<div class="spinner-container" *ngIf="loading">
+  <p-progressSpinner class="loading"></p-progressSpinner>
+</div>
+
+
+<div class="container" dir="rtl" *ngIf="!loading" >
+
   <!-- نموذج البحث المتقدم -->
   <div class="search-form">
     <h3>البحث في الأجهزة</h3>
@@ -104,7 +111,8 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-device>
-          <tr [class.selected-row]="device === selectedDevice"  (click)="showOperations(device)">
+          <tr [class.selected-row]="device === selectedDevice" (click)="selectDevice(device)"
+            (dblclick)="showOperations(device)">
             <td>{{ device.source }}</td>
             <td>{{ device.brotherName }}</td>
             <td>{{ device.laptopName }}</td>
@@ -129,4 +137,6 @@
         </ng-template>
       </p-table>
     </div>
+  </div>
+
 </div>

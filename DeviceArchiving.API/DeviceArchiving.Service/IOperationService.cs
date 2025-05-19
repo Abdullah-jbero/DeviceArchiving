@@ -1,10 +1,11 @@
-﻿using DeviceArchiving.Data.Entities;
+﻿using DeviceArchiving.Data.Dto;
+using DeviceArchiving.Data.Entities;
 
 namespace DeviceArchiving.Service
 {
     public interface IOperationService
     {
-        Task AddOperations(Operation operation);
+        Task AddOperations(CreateOperation operation);
         Task<List<Operation>> GetAllOperations(int driveId);
 
     }

@@ -1,4 +1,5 @@
-﻿using DeviceArchiving.Data.Entities;
+﻿using DeviceArchiving.Data.Dto;
+using DeviceArchiving.Data.Entities;
 using DeviceArchiving.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,7 @@ public class OperationsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Operation>> PostOperation(Operation operation)
+    public async Task<ActionResult<Operation>> PostOperation(CreateOperation operation)
     {
         await operationService.AddOperations(operation);
         return CreatedAtAction(nameof(GetAllOperations), new { deviceId = operation.DeviceId }, operation);

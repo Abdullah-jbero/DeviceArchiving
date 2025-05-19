@@ -19,3 +19,5 @@ public class CreateDeviceDto
     public string? ContactNumber { get; set; }
     public string Card { get; set; } = null!;
 }
+
+

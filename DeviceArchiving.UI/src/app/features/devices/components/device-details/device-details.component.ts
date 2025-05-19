@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { OperationType } from '../../../../core/models/operation-type.model';
-import { Operation } from '../../../../core/models/operation.model';
+import { CreateOperation, Operation } from '../../../../core/models/operation.model';
 import { DeviceService } from '../../../../core/services/device.service';
 import { OperationTypeService } from '../../../../core/services/operation-type.service';
 import { OperationService } from '../../../../core/services/operation.service';
@@ -67,10 +67,13 @@ export class DeviceDetailsComponent implements OnInit {
   addOperation(): void {
     if (this.operationForm.invalid) return;
 
-    const operation: Operation = {
+    const operation: CreateOperation = {
       deviceId: this.deviceId,
       operationName: this.operationForm.value.details,
-      createdAt: new Date().toLocaleDateString('en-US')
+      newValue: this.operationForm.value.newValue,
+      oldValue: this.operationForm.value.oldValue,
+      comment: this.operationForm.value.comment,
+
     };
 
     this.operationService.addOperation(operation).subscribe({

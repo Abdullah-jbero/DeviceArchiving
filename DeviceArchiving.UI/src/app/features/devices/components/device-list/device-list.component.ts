@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 
-import { Operation } from '../../../../core/models/operation.model';
+import { CreateOperation, Operation } from '../../../../core/models/operation.model';
 import { DeviceService } from '../../../../core/services/device.service';
 import { OperationService } from '../../../../core/services/operation.service';
 import * as XLSX from 'xlsx';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
 import { AddOperationDialogComponent } from '../../../operations/components/add-operation-dialog/add-operation-dialog.component';
-import { DevicesDto } from '../../../../core/models/device.model';
+import { DevicesDto, OperationDto } from '../../../../core/models/device.model';
 import { OperationListComponent } from '../../../operations/components/operation-list/operation-list.component';
 
 
@@ -22,7 +22,7 @@ export class DeviceListComponent implements OnInit {
   devices: DevicesDto[] | any[] = [];
   filteredDevices: DevicesDto[] = [];
   selectedDevice: DevicesDto | null = null;
-  operations: Operation[] = [];
+  operations: OperationDto[] = [];
   globalSearchQuery: string = '';
   searchCriteria = {
     laptopName: '',
@@ -42,6 +42,8 @@ export class DeviceListComponent implements OnInit {
   };
   darkMode: boolean = false;
   dialogRef: DynamicDialogRef | null = null;
+  loading: boolean = false;
+
   constructor(
     private deviceService: DeviceService,
     private operationService: OperationService,
@@ -49,94 +51,80 @@ export class DeviceListComponent implements OnInit {
     private messageService: MessageService
   ) { }
 
+
+
   ngOnInit(): void {
-    console.log('DeviceListComponent initialized');
-    // Fetch devices from the service
-    this.deviceService.getAll().subscribe(devices => {
-      this.devices = devices;
-      this.filteredDevices = [...this.devices];
-      this.deviceTypes = [...new Set(this.devices.map(device => device.type))].map(type => ({
-        label: type,
-        value: type
-      }));
-      console.log(this.deviceTypes);
+    this.loading = true;
+    this.deviceService.getAll().subscribe({
+      next: (devices) => {
+        this.devices = devices;
+        this.filteredDevices = [...this.devices];
+        this.deviceTypes = [...new Set(this.devices.map(device => device.type))].map(type => ({
+          label: type,
+          value: type
+        }));
+        this.loading = false;
+      },
+
+      error: () => {
+        this.loading = false;
+        this.messageService.add({ severity: 'error', summary: 'خطأ', detail: 'فشل تحميل الأجهزة.' });
+      }
     });
   }
 
   selectDevice(device: DevicesDto): void {
     this.selectedDevice = device;
-    this.operationService.getOperationsByDeviceId(device.id!).subscribe((operations) => {
-      this.operations = operations;
+  }
+
+  showOperations(device: DevicesDto): void {
+    this.deviceService.getById(device.id!).subscribe({
+      next: (response) => {
+        this.operations = response.operationsDtos.map(op => ({
+          operationName: op.operationName || op.operationName,
+          oldValue: op.oldValue || op.oldValue,
+          newValue: op.newValue || op.newValue,
+          comment: op.comment,
+          userName: op.userName || op.userName,
+          createdAt: op.createdAt || op.createdAt
+        }));
+        console.log('Mapped operations:', this.operations); // Debug
+        this.dialogRef = this.dialogService.open(OperationListComponent, {
+          header: 'العمليات',
+          width: '70%',
+          contentStyle: { direction: 'rtl', padding: '1rem' },
+          data: { operations: this.operations }
+        });
+      },
+      error: (error) => {
+        console.error('Error fetching operations:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ',
+          detail: 'فشل جلب العمليات. حاول مرة أخرى.'
+        });
+      }
     });
-
   }
-
-
-  showOperations(device: DevicesDto) {
-    this.selectedDevice = device;
-    if (this.selectedDevice) {
-      console.info('device selected');
-      this.operationService.getOperationsByDeviceId(this.selectedDevice.id!).subscribe(
-        (operations) => {
-          this.operations = operations;
-
-          // Show the operations in a dialog
-          this.dialogRef = this.dialogService.open(OperationListComponent, {
-            header: 'العمليات',
-            width: '100%',
-         
-            contentStyle: { 'direction': 'rtl', 'padding': '1rem' },
-            data: { operations: this.operations } // Pass operations to the dialog
-          });
-        },
-        (error) => {
-          // Handle error appropriately
-          console.error('Error fetching operations:', error);
-          // Optionally show a notification or alert to the user
-        }
-      );
-    } else {
-      console.warn('No device selected');
-      // Optionally show a notification or alert to the user
-    }
-  }
-
-
   applyFilter(): void {
     let filtered = this.devices;
 
     if (this.globalSearchQuery.trim()) {
       const query = this.globalSearchQuery.toLowerCase();
       filtered = filtered.filter(device =>
-        (device.source?.toLowerCase().includes(query) || false) ||
-        (device.brotherName?.toLowerCase().includes(query) || false) ||
-        (device.laptopName?.toLowerCase().includes(query) || false) ||
-        (device.systemPassword?.toLowerCase().includes(query) || false) ||
-        (device.windowsPassword?.toLowerCase().includes(query) || false) ||
-        (device.hardDriassword?.toLowerCase().includes(query) || false) ||
-        (device.freezePassword?.toLowerCase().includes(query) || false) ||
-        (device.codvePassword?.toLowerCase().includes(query) || false) ||
-        (device.source?.toLowerCase().includes(query) || false) ||
-        (device.freezePe?.toLowerCase().includes(query) || false) ||
-        (device.serialNumber?.toLowerCase().includes(query) || false) ||
-        (device.ؤ?.toLowerCase().includes(query) || false) ||
-        (device.serialNumber?.toLowerCase().includes(query) || false) ||
-        (device.code?.toLowerCase().includes(query) || false)
-          (device.card?.toLowerCase().includes(query) || false)
-          (device.type?.toLowerCase().includes(query) || false)
-          (device.createdAt?.toLowerCase().includes(query) || false)
+        ['source', 'brotherName', 'laptopName', 'systemPassword', 'windowsPassword',
+          'hardDrivePassword', 'freezePassword', 'code', 'card', 'serialNumber', 'type']
+          .some(key => device[key]?.toLowerCase().includes(query))
       );
     }
 
-    filtered = filtered.filter((device) => {
-      return (
-        (!this.searchCriteria.laptopName ||
-          device.laptopName.toLowerCase().includes(this.searchCriteria.laptopName.toLowerCase())) &&
-        (!this.searchCriteria.serialNumber ||
-          device.serialNumber.toLowerCase().includes(this.searchCriteria.serialNumber.toLowerCase())) &&
-        (!this.searchCriteria.type || device.type === this.searchCriteria.type)
-      );
-    });
+    filtered = filtered.filter(device =>
+      (!this.searchCriteria.laptopName ||
+        device.laptopName.toLowerCase().includes(this.searchCriteria.laptopName.toLowerCase())) &&
+      (!this.searchCriteria.serialNumber ||
+        device.serialNumber.toLowerCase().includes(this.searchCriteria.serialNumber.toLowerCase())) &&
+      (!this.searchCriteria.type || device.type === this.searchCriteria.type)
+    );
 
     this.filteredDevices = filtered;
   }
@@ -157,6 +145,7 @@ export class DeviceListComponent implements OnInit {
     this.filteredDevices = this.devices;
   }
 
+
   deleteDevice(): void {
     if (this.selectedDevice) {
       this.deviceService.delete(this.selectedDevice.id!).subscribe(() => {
@@ -169,7 +158,6 @@ export class DeviceListComponent implements OnInit {
   }
 
   exportToExcel(): void {
-
     //show message `file download` dialog
     this.messageService.add({ severity: 'info', summary: 'جاري التحميل', detail: 'جاري تحميل ملف Excel...' });
 
@@ -214,9 +202,6 @@ export class DeviceListComponent implements OnInit {
   }
 
   importDevices(): void {
-
-    alert('لا يمكنك استيراد الأجهزة في الوقت الحالي. هذه الميزة قيد التطوير.');
-    // Uncomment the following code when the import feature is ready
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.xlsx, .xls';
@@ -228,7 +213,36 @@ export class DeviceListComponent implements OnInit {
         const workbook = XLSX.read(data, { type: 'array' });
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        console.log(jsonData);
+
+        // Map Excel data to DevicesDto
+        // const devices: DevicesDto[] = jsonData.map((row: any) => ({
+        //   id: null, // ID should be generated by backend
+        //   laptopName: row['اسم اللاب توب'] || '',
+        //   serialNumber: row['الرقم التسلسلي'] || '',
+        //   type: row['النوع'] || '',
+        //   source: row['الجهة'] || '',
+        //   brotherName: row['اسم الأخ'] || '',
+        //   systemPassword: row['كلمة مرور النظام'] || '',
+        //   windowsPassword: row['كلمة مرور ويندوز'] || '',
+        //   hardDrivePassword: row['كلمة التشفير'] || '',
+        //   freezePassword: row['كلمة التجميد'] || '',
+        //   code: row['الكود'] || '',
+        //   card: row['الكرت'] || '',
+        //   createdAt: row['تاريخ الإنشاء'] || new Date().toISOString(),
+        // }));
+
+        // Send to DeviceService
+        // this.deviceService.importDevices(devices).subscribe({
+        //   next: (newDevices) => {
+        //     this.devices = [...this.devices, ...newDevices];
+        //     this.filteredDevices = [...this.devices];
+        //     this.messageService.add({ severity: 'success', summary: 'نجاح', detail: 'تم استيراد الأجهزة بنجاح!' });
+        //   },
+        //   error: (err) => {
+        //     console.error('Error importing devices:', err);
+        //     this.messageService.add({ severity: 'error', summary: 'خطأ', detail: 'فشل استيراد الأجهزة.' });
+        //   }
+        // });
       };
       reader.readAsArrayBuffer(file);
     };
@@ -256,22 +270,22 @@ export class DeviceListComponent implements OnInit {
     });
 
     // Handle modal close
-    this.dialogRef.onClose.subscribe((operationData: Partial<Operation>) => {
+    this.dialogRef.onClose.subscribe((operationData: Partial<CreateOperation>) => {
       if (operationData) {
-        const newOperation: Operation = {
+        const newOperation: CreateOperation = {
           deviceId,
           operationName: operationData.operationName!,
           oldValue: operationData.oldValue || null,
           newValue: operationData.newValue || null,
-          createdAt: new Date().toISOString() // String format for createdAt
+          comment: operationData.comment || null
         };
 
         this.operationService.addOperation(newOperation).subscribe({
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'نجاح', detail: 'تم إضافة العملية بنجاح!' });
             if (this.selectedDevice?.id === deviceId) {
-              this.operationService.getOperationsByDeviceId(deviceId).subscribe((operations) => {
-                this.operations = operations;
+              this.deviceService.getById(deviceId).subscribe((response) => {
+                this.operations = response.operationsDtos;
               });
             }
           },
@@ -283,4 +297,12 @@ export class DeviceListComponent implements OnInit {
       }
     });
   }
+
+  ngOnDestroy(): void {
+    if (this.dialogRef) {
+      this.dialogRef.close();
+      this.dialogRef = null;
+    }
+  }
+
 }

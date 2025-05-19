@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthenticationResponse } from '../models/authentication.model';
+import { Router } from '@angular/router';
 
 export interface AuthenticationRequest {
   email: string;
@@ -16,19 +17,27 @@ export interface BaseResponse<T> {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AccountService {
-  private apiUrl = `${environment.apiBaseUrl}/api/account`; // e.g., http://localhost:5000/api/account
+  private apiUrl = `${environment.apiBaseUrl}/api/Account`; // e.g., http://localhost:5000/api/account
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private router: Router) {}
 
-  authenticate(request: AuthenticationRequest): Observable<BaseResponse<AuthenticationResponse>> {
-    return this.http.post<BaseResponse<AuthenticationResponse>>(`${this.apiUrl}/authenticate`, request);
+  authenticate(
+    request: AuthenticationRequest
+  ): Observable<BaseResponse<AuthenticationResponse>> {
+    return this.http.post<BaseResponse<AuthenticationResponse>>(
+      `${this.apiUrl}/authenticate`,
+      request
+    );
   }
 
   addUser(request: AuthenticationRequest): Observable<BaseResponse<string>> {
-    return this.http.post<BaseResponse<string>>(`${this.apiUrl}/register`, request);
+    return this.http.post<BaseResponse<string>>(
+      `${this.apiUrl}/register`,
+      request
+    );
   }
 
   saveUserInfo(token: string, userName: string, base64Image: string): void {
@@ -37,15 +46,17 @@ export class AccountService {
     sessionStorage.setItem('userPicture', base64Image);
   }
 
-
-  getUserInfo(): { token: string | null, userName: string | null, picture: string | null } {
+  getUserInfo(): {
+    token: string | null;
+    userName: string | null;
+    picture: string | null;
+  } {
     const token = sessionStorage.getItem('authToken');
     const userName = sessionStorage.getItem('userName');
     const picture = sessionStorage.getItem('userPicture');
 
     return { token, userName, picture };
   }
-
 
   getToken(): string | null {
     return sessionStorage.getItem('authToken');
@@ -60,5 +71,13 @@ export class AccountService {
       this.getUserInfo();
     }
     return isAuthenticated;
+  }
+
+  logout(): void {
+    // Optionally, you can also redirect the user to the login page or show a message
+    // this.router.navigate(['/login']);
+    // this.toastr.success('Logged out successfully');
+    this.clearSession();
+    this.router.navigate(['/account/login']);
   }
 }

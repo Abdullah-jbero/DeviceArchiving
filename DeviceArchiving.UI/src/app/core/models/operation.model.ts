@@ -3,6 +3,15 @@ export interface Operation {
     operationName: string;
     oldValue?: string | null;
     newValue?: string | null;
+    comment?: string | null;
     createdAt: string;
-    comment?: string;
+
+}
+
+export interface CreateOperation {
+    deviceId: number;
+    operationName: string;
+    oldValue: string | null;
+    newValue: string | null;
+    comment: string | null;
 }

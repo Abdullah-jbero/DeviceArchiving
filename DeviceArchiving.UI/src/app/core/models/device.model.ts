@@ -25,7 +25,7 @@ export interface OperationDto {
   newValue?: string;
   comment?: string;
   createdAt: string;
-  userName: string;
+  userName?: string; // Make optional for flexibility
 }
 
 export interface DeviceDto extends DevicesDto {

@@ -5,7 +5,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
 // PrimeNG
-import { TableModule } from 'primeng/table';
+import { ColumnFilter, SortIcon, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
@@ -14,11 +14,11 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 // Angular Material
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule }  from '@angular/material/button';
-import { MatIconModule }    from '@angular/material/icon';
-import { MatMenuModule }    from '@angular/material/menu';
-import { MatListModule }    from '@angular/material/list';
-import { MatRippleModule }  from '@angular/material/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatListModule } from '@angular/material/list';
+import { MatRippleModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -62,6 +62,7 @@ import { DynamicDialogModule } from 'primeng/dynamicdialog';
     ReactiveFormsModule,
     RouterModule,
 
+
     // PrimeNG
     TableModule,
     ButtonModule,
@@ -70,6 +71,8 @@ import { DynamicDialogModule } from 'primeng/dynamicdialog';
     ToastModule,
     ProgressSpinnerModule,
     DynamicDialogModule,
+    SortIcon,
+    ColumnFilter,
 
     // Angular Material
     MatToolbarModule,

@@ -22,6 +22,8 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
             Type = dto.Type,
             SerialNumber = dto.SerialNumber,
             Card = dto.Card,
+            Comment = dto.Comment,
+            ContactNumber = dto.ContactNumber,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -57,40 +59,89 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
     }
 
 
+    //public async Task<GetDeviceDto?> GetDeviceByIdAsync(int id)
+    //{
+    //    return await context.Devices
+    //        .Where(d => d.Id == id)
+    //        .Include(d=>d.User)
+    //        .Include(d=>d.Operations)
+    //        .Select(d => new GetDeviceDto
+    //        {
+    //            Id = d.Id,
+    //            Source = d.Source,
+    //            BrotherName = d.BrotherName,
+    //            LaptopName = d.LaptopName,
+    //            SystemPassword = d.SystemPassword,
+    //            WindowsPassword = d.WindowsPassword,
+    //            HardDrivePassword = d.HardDrivePassword,
+    //            FreezePassword = d.FreezePassword,
+    //            Code = d.Code,
+    //            Type = d.Type,
+    //            SerialNumber = d.SerialNumber,
+    //            Comment = d.Comment,
+    //            ContactNumber = d.ContactNumber,
+    //            Card = d.Card,
+    //            UserName = d.User.UserName,
+    //            OperationsDtos = d.Operations.Select(o => new OperationDto
+    //            {
+    //                OperationName = o.OperationName,
+    //                OldValue = o.OldValue,
+    //                NewValue = o.NewValue,
+    //                Comment = o.Comment,
+    //                CreatedAt = o.CreatedAt,
+    //                UserName = d.User.UserName
+    //            }).ToList()
+    //        })
+    //        .FirstOrDefaultAsync();
+    //}
+
+
     public async Task<GetDeviceDto?> GetDeviceByIdAsync(int id)
     {
-        return await context.Devices
-            .Where(d => d.Id == id)
-            .Include(d=>d.User)
-            .Include(d=>d.Operations)
-            .Select(d => new GetDeviceDto
+        // Fetch the device with its user
+        var device = await context.Devices
+            .Include(d => d.User)
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (device == null)
+        {
+            return null;
+        }
+
+        // Fetch operations separately
+        var operations = await context.Operations
+            .Where(o => o.DeviceId == id)
+            .Select(o => new OperationDto
             {
-                Id = d.Id,
-                Source = d.Source,
-                BrotherName = d.BrotherName,
-                LaptopName = d.LaptopName,
-                SystemPassword = d.SystemPassword,
-                WindowsPassword = d.WindowsPassword,
-                HardDrivePassword = d.HardDrivePassword,
-                FreezePassword = d.FreezePassword,
-                Code = d.Code,
-                Type = d.Type,
-                SerialNumber = d.SerialNumber,
-                Comment = d.Comment,
-                ContactNumber = d.ContactNumber,
-                Card = d.Card,
-                UserName = d.User.UserName,
-                OperationsDtos = d.Operations.Select(o => new OperationDto
-                {
-                    OperationName = o.OperationName,
-                    OldValue = o.OldValue,
-                    NewValue = o.NewValue,
-                    Comment = o.Comment,
-                    CreatedAt = o.CreatedAt,
-                    UserName = d.User.UserName
-                }).ToList()
+                OperationName = o.OperationName,
+                OldValue = o.OldValue,
+                NewValue = o.NewValue,
+                Comment = o.Comment,
+                CreatedAt = o.CreatedAt,
+                UserName = device.User.UserName // Use the already-fetched UserName
             })
-            .FirstOrDefaultAsync();
+            .ToListAsync();
+
+        // Construct the DTO
+        return new GetDeviceDto
+        {
+            Id = device.Id,
+            Source = device.Source,
+            BrotherName = device.BrotherName,
+            LaptopName = device.LaptopName,
+            SystemPassword = device.SystemPassword,
+            WindowsPassword = device.WindowsPassword,
+            HardDrivePassword = device.HardDrivePassword,
+            FreezePassword = device.FreezePassword,
+            Code = device.Code,
+            Type = device.Type,
+            SerialNumber = device.SerialNumber,
+            Comment = device.Comment,
+            ContactNumber = device.ContactNumber,
+            Card = device.Card,
+            UserName = device.User.UserName,
+            OperationsDtos = operations
+        };
     }
 
 
@@ -112,6 +163,7 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
         if (device == null)
             throw new KeyNotFoundException("الجهاز غير موجود");
 
+  
         var operations = new List<Operation>();
 
         TrackChange(operations, device, d => d.Source, dto.Source, id, "تحديث الجهة");
@@ -125,6 +177,9 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
         TrackChange(operations, device, d => d.Type, dto.Type, id, "تحديث النوع");
         TrackChange(operations, device, d => d.SerialNumber, dto.SerialNumber, id, "تحديث رقم السيريال");
         TrackChange(operations, device, d => d.Card, dto.Card, id, "تحديث الكرت");
+        TrackChange(operations, device, d => d.Comment, dto.Comment, id, "تحديث الملاحظة");
+        TrackChange(operations, device, d => d.ContactNumber, dto.ContactNumber, id, "تحديث رقم التواصل");
+        
 
         device.UpdatedAt = DateTime.UtcNow;
 
@@ -134,8 +189,16 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
             context.Operations.AddRange(operations);
         }
 
-        await context.SaveChangesAsync();
-    }   
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            // Log the error and throw a more user-friendly exception
+            throw new Exception("حدث خطأ أثناء تحديث البيانات. يرجى المحاولة مرة أخرى.", ex);
+        }
+    }
     private void TrackChange(List<Operation> operations, Device device, Func<Device, string?> selector, string? newValue, int deviceId, string operationName)
     {
         var oldValue = selector(device);

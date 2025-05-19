@@ -23,7 +23,7 @@ export class HeaderComponent implements OnInit {
 
   userName: string = 'غير معروف';
   pictureUrl: string = './1.jpg';
-  constructor(public accountService: AccountService, private router: Router) { }
+  constructor(public accountService: AccountService) { }
 
   ngOnInit(): void {
     if (this.accountService.isAuthenticated()) {
@@ -33,15 +33,17 @@ export class HeaderComponent implements OnInit {
 
   private loadUserData(): void {
     const userInfo = this.accountService.getUserInfo();
-    console.log(userInfo); 
+    console.log(userInfo);
     this.userName = userInfo.userName ?? 'غير معروف';
-    this.pictureUrl = userInfo.picture ?? './1.jpg';
+    this.pictureUrl = './1.jpg';
+    // this.pictureUrl = userInfo.picture && userInfo.picture.length > 1
+    //   ? userInfo.picture
+    //   : './1.jpg';
   }
 
 
 
   logout(): void {
-    this.accountService.clearSession();
-    this.router.navigate(['/account/login']);
+    this.accountService.logout();
   }
 }

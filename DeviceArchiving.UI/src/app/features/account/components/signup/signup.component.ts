@@ -13,7 +13,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class SignupComponent {
   signupForm: FormGroup;
   loading = false;
-
+  hidePassword = true;
+  
   constructor(
     private fb: FormBuilder,
     private accountService: AccountService,
@@ -24,6 +25,10 @@ export class SignupComponent {
       userName: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.hidePassword = !this.hidePassword;
   }
 
   onSubmit(): void {

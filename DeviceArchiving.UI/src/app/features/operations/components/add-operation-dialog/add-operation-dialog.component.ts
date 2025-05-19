@@ -23,7 +23,7 @@ interface DropdownOption {
 })
 export class AddOperationDialogComponent implements OnInit {
   deviceName: string;
-  operation: Partial<Operation> = { operationName: '', oldValue: null, newValue: null };
+  operation: Partial<Operation> = { operationName: '', oldValue: null, newValue: null , comment :null };
   operationTypeOptions: DropdownOption[] = [];
   isLoading = false;
 
