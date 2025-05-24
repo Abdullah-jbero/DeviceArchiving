@@ -2,12 +2,12 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
   AccountService,
-  AuthenticationRequest,
-  BaseResponse,
+  AuthenticationRequest
 } from '../../../../core/services/account.service';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthenticationResponse } from '../../../../core/models/authentication.model';
+import { BaseResponse } from '../../../../core/models/update-device.model';
 
 @Component({
   selector: 'app-login',

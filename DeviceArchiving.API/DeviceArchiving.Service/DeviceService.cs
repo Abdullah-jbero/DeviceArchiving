@@ -1,4 +1,5 @@
 ﻿using DeviceArchiving.Data.Contexts;
+using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Data.Entities;
 using DeviceArchiving.Service;
@@ -31,6 +32,56 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
         context.Devices.Add(device);
         await context.SaveChangesAsync();
     }
+
+    public async Task<BaseResponse<int>> AddDevicesAsync(List<CreateDeviceDto> dtos)
+    {
+        try
+        {
+            var devices = dtos.Select(dto => new Device
+            {
+                Source = dto.Source,
+                BrotherName = dto.BrotherName,
+                LaptopName = dto.LaptopName,
+                SystemPassword = dto.SystemPassword,
+                WindowsPassword = dto.WindowsPassword,
+                HardDrivePassword = dto.HardDrivePassword,
+                FreezePassword = dto.FreezePassword,
+                Code = dto.Code,
+                Type = dto.Type,
+                SerialNumber = dto.SerialNumber,
+                Card = dto.Card,
+                Comment = dto.Comment,
+                ContactNumber = dto.ContactNumber,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            }).ToList();
+
+            // Optional: Check for duplicate serial numbers
+            var duplicateSerials = devices.GroupBy(d => d.SerialNumber)
+                                          .Where(g => g.Count() > 1)
+                                          .Select(g => g.Key)
+                                          .ToList();
+            if (duplicateSerials.Any())
+            {
+                return BaseResponse<int>.Failure($"تم العثور على أرقام تسلسلية مكررة: {string.Join(", ", duplicateSerials)}");
+            }
+
+            int batchSize = 100;
+            for (int i = 0; i < devices.Count; i += batchSize)
+            {
+                var batch = devices.Skip(i).Take(batchSize).ToList();
+                await context.Devices.AddRangeAsync(batch);
+                await context.SaveChangesAsync();
+            }
+
+            return BaseResponse<int>.SuccessResult(devices.Count, "تمت إضافة الأجهزة بنجاح");
+        }
+        catch (Exception ex)
+        {
+            return BaseResponse<int>.Failure($"خطأ أثناء إضافة الأجهزة: {ex.Message}");
+        }
+    }
+
 
     public async Task<List<GetAllDevicesDto>> GetAllDevicesAsync()
     {

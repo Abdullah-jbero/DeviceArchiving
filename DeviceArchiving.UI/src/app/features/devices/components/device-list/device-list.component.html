@@ -5,7 +5,7 @@
 </div>
 
 
-<div class="container" dir="rtl" *ngIf="!loading" >
+<div class="container" dir="rtl" *ngIf="!loading">
 
   <!-- نموذج البحث المتقدم -->
   <div class="search-form">
@@ -28,19 +28,20 @@
   <div class="button-container">
     <p-button label="إضافة جهاز" routerLink="add" styleClass="p-button-success add-button" />
     <p-button label="تعديل جهاز" icon="pi pi-pencil" [routerLink]="selectedDevice ? ['edit', selectedDevice.id] : null"
-      styleClass="p-button-secondary custom-button add-button" [disabled]="!selectedDevice" />
+      styleClass="p-button-secondary  add-button" [disabled]="!selectedDevice" />
 
-    <p-button label="حذف جهاز" icon="pi pi-trash" (click)="deleteDevice()" styleClass="p-button-danger custom-button"
+    <p-button label="حذف جهاز" icon="pi pi-trash" (click)="deleteDevice()" styleClass="p-button-danger "
       [disabled]="!selectedDevice" />
 
     <p-button label="تصدير" icon="pi pi-file-export" (click)="exportToExcel()"
-      styleClass="p-button-info custom-button" />
-    <p-button label="استيراد" icon="pi pi-file-import" (click)="importDevices()"
-      styleClass="p-button-info custom-button" />
+      styleClass="p-button-info " />
 
+    <p-fileUpload #fileInput mode="basic" accept=".xlsx,.xls" (onSelect)="onFileSelected($event)" [disabled]="loading"
+      styleClass="p-button-secondary " chooseLabel="اختر ملف Excel"></p-fileUpload>
 
     <p-button label="اضافة العمليات" styleClass="p-button-success" [disabled]="!selectedDevice"
       (click)="addOperation(selectedDevice!.id!)" />
+
 
 
 

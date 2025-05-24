@@ -79,35 +79,44 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+
+// Read allowed origins from configuration
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.WithOrigins(allowedOrigins!)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials()
+              .WithExposedHeaders("x-pagination", "Authorization");
+    });
+});
+
+
 var app = builder.Build();
 
 // ⚙️ Apply Migrations in Production
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<DeviceArchivingContext>();
-    try
-    {
-        // Apply any pending migrations
-        dbContext.Database.Migrate();
-        app.Logger.LogInformation("Database migrations applied successfully.");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "An error occurred while applying database migrations.");
-        throw; // Optionally, stop the application if migrations fail
-    }
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var dbContext = scope.ServiceProvider.GetRequiredService<DeviceArchivingContext>();
+//    try
+//    {
+//        // Apply any pending migrations
+//        dbContext.Database.Migrate();
+//        app.Logger.LogInformation("Database migrations applied successfully.");
+//    }
+//    catch (Exception ex)
+//    {
+//        app.Logger.LogError(ex, "An error occurred while applying database migrations.");
+//        throw; // Optionally, stop the application if migrations fail
+//    }
+//}
 
-// ⚙️ Middleware
 
-//This middleware registers a custom error handler middleware to handle exceptions in the application
-app.UseCors(policy => policy
-    .WithOrigins("http://localhost:6027") // الأصل المسموح فقط
-    .AllowAnyMethod()
-    .AllowAnyHeader()
-    .AllowCredentials()
-    .WithExposedHeaders("x-pagination", "Authorization"));
-
+app.UseCors("CorsPolicy");
 
 app.UseSwagger();
 app.UseSwaggerUI();

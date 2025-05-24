@@ -1,35 +1,36 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthenticationResponse } from '../models/authentication.model';
 import { Router } from '@angular/router';
+import { BaseResponse } from '../models/update-device.model';
 
 export interface AuthenticationRequest {
   email: string;
   password: string;
 }
 
-export interface BaseResponse<T> {
-  success: boolean;
-  data: T;
-  message: string;
-}
+
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class AccountService {
-  private apiUrl = `${environment.apiBaseUrl}/api/Account`; // e.g., http://localhost:5000/api/account
+  private readonly apiUrl: string = `${environment.apiBaseUrl}/api/Account`;
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly router: Router
+  ) { }
 
-  authenticate(
-    request: AuthenticationRequest
-  ): Observable<BaseResponse<AuthenticationResponse>> {
+  authenticate(request: AuthenticationRequest): Observable<BaseResponse<AuthenticationResponse>> {
     return this.http.post<BaseResponse<AuthenticationResponse>>(
       `${this.apiUrl}/authenticate`,
       request
+    ).pipe(
+      catchError(this.handleError)
     );
   }
 
@@ -37,8 +38,12 @@ export class AccountService {
     return this.http.post<BaseResponse<string>>(
       `${this.apiUrl}/register`,
       request
+    ).pipe(
+      catchError(this.handleError)
     );
   }
+
+
 
   saveUserInfo(token: string, userName: string, base64Image: string): void {
     sessionStorage.setItem('authToken', token);
@@ -46,38 +51,35 @@ export class AccountService {
     sessionStorage.setItem('userPicture', base64Image);
   }
 
-  getUserInfo(): {
-    token: string | null;
-    userName: string | null;
-    picture: string | null;
-  } {
-    const token = sessionStorage.getItem('authToken');
-    const userName = sessionStorage.getItem('userName');
-    const picture = sessionStorage.getItem('userPicture');
-
-    return { token, userName, picture };
+  getUserInfo(): { token: string | null; userName: string | null; picture: string | null } {
+    return {
+      token: sessionStorage.getItem('authToken'),
+      userName: sessionStorage.getItem('userName'),
+      picture: sessionStorage.getItem('userPicture')
+    };
   }
 
   getToken(): string | null {
     return sessionStorage.getItem('authToken');
   }
 
+  isAuthenticated(): boolean {
+    return !!this.getToken();
+  }
+
   clearSession(): void {
     sessionStorage.clear();
   }
-  isAuthenticated(): boolean {
-    var isAuthenticated = !!this.getToken();
-    if (isAuthenticated) {
-      this.getUserInfo();
-    }
-    return isAuthenticated;
-  }
 
   logout(): void {
-    // Optionally, you can also redirect the user to the login page or show a message
-    // this.router.navigate(['/login']);
-    // this.toastr.success('Logged out successfully');
     this.clearSession();
     this.router.navigate(['/account/login']);
+  }
+
+  private handleError(error: any): Observable<never> {
+    console.error('An error occurred:', error);
+    const errorMessage = error.error?.message || 'An unexpected error occurred';
+    alert(errorMessage);
+    return throwError(() => new Error(errorMessage));
   }
 }

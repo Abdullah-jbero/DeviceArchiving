@@ -3,18 +3,18 @@
 export interface DevicesDto {
   id: number;
   source: string;
-  brotherName: string;
   laptopName: string;
+  brotherName: string;
   systemPassword: string;
   windowsPassword: string;
   hardDrivePassword: string;
   freezePassword: string;
-  code: string;
-  type: string;
   serialNumber: string;
+  type: string;
+  code: string;
+  card: string;
   comment?: string;
   contactNumber?: string;
-  card: string;
   userName: string;
   createdAt: string;
 }

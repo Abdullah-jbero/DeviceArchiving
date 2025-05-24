@@ -1,76 +1,104 @@
-import { Component, OnInit } from '@angular/core';
-
-import { CreateOperation, Operation } from '../../../../core/models/operation.model';
-import { DeviceService } from '../../../../core/services/device.service';
-import { OperationService } from '../../../../core/services/operation.service';
-import * as XLSX from 'xlsx';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
-import { AddOperationDialogComponent } from '../../../operations/components/add-operation-dialog/add-operation-dialog.component';
+import * as XLSX from 'xlsx';
+import { DeviceService } from '../../../../core/services/device.service';
+import { OperationService } from '../../../../core/services/operation.service';
 import { DevicesDto, OperationDto } from '../../../../core/models/device.model';
+import { CreateOperation } from '../../../../core/models/operation.model';
+import { AddOperationDialogComponent } from '../../../operations/components/add-operation-dialog/add-operation-dialog.component';
 import { OperationListComponent } from '../../../operations/components/operation-list/operation-list.component';
+import { FileSelectEvent } from 'primeng/fileupload';
+import { BaseResponse } from '../../../../core/models/update-device.model';
 
+interface SearchCriteria {
+  laptopName: string;
+  serialNumber: string;
+  type: string;
+}
+
+interface Filter {
+  value: string | null;
+  matchMode: string;
+}
 
 @Component({
   selector: 'app-device-list',
   templateUrl: './device-list.component.html',
   styleUrls: ['./device-list.component.css'],
   standalone: false,
-  providers: [DialogService, MessageService]
+  providers: [DialogService, MessageService],
 })
-export class DeviceListComponent implements OnInit {
-  devices: DevicesDto[] | any[] = [];
+export class DeviceListComponent implements OnInit, OnDestroy {
+  devices: DevicesDto[] = [];
   filteredDevices: DevicesDto[] = [];
   selectedDevice: DevicesDto | null = null;
   operations: OperationDto[] = [];
   globalSearchQuery: string = '';
-  searchCriteria = {
+  searchCriteria: SearchCriteria = {
     laptopName: '',
     serialNumber: '',
-    type: ''
+    type: '',
   };
   deviceTypes: { label: string; value: string }[] = [];
-  filters: any = {
-    global: { value: null, matchMode: 'contains' },
-    source: { value: null, matchMode: 'contains' },
-    brotherName: { value: null, matchMode: 'contains' },
-    laptopName: { value: null, matchMode: 'contains' },
-    type: { value: null, matchMode: 'equals' },
-    serialNumber: { value: null, matchMode: 'contains' },
-    isActive: { value: null, matchMode: 'equals' },
-    createdAt: { value: null, matchMode: 'dateIs' }
-  };
-  darkMode: boolean = false;
   dialogRef: DynamicDialogRef | null = null;
   loading: boolean = false;
+  selectedFile: File | null = null;
+  private destroy$ = new Subject<void>();
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  private readonly searchableFields: (keyof DevicesDto)[] = [
+    'source',
+    'laptopName',
+    'brotherName',
+    'systemPassword',
+    'windowsPassword',
+    'hardDrivePassword',
+    'freezePassword',
+    'serialNumber',
+    'type',
+    'code',
+    'comment',
+    'contactNumber',
+    'userName',
+    'createdAt',
+
+  ];
 
   constructor(
-    private deviceService: DeviceService,
-    private operationService: OperationService,
-    private dialogService: DialogService,
-    private messageService: MessageService
+    private readonly deviceService: DeviceService,
+    private readonly operationService: OperationService,
+    private readonly dialogService: DialogService,
+    private readonly messageService: MessageService
   ) { }
 
-
-
   ngOnInit(): void {
-    this.loading = true;
-    this.deviceService.getAll().subscribe({
-      next: (devices) => {
-        this.devices = devices;
-        this.filteredDevices = [...this.devices];
-        this.deviceTypes = [...new Set(this.devices.map(device => device.type))].map(type => ({
-          label: type,
-          value: type
-        }));
-        this.loading = false;
-      },
+    this.loadDevices();
+  }
 
-      error: () => {
-        this.loading = false;
-        this.messageService.add({ severity: 'error', summary: 'خطأ', detail: 'فشل تحميل الأجهزة.' });
-      }
-    });
+  private loadDevices(): void {
+    this.loading = true;
+    this.deviceService
+      .getAll()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (devices: DevicesDto[]) => {
+          this.devices = devices;
+          this.filteredDevices = [...devices];
+          this.deviceTypes = [
+            ...new Set(devices.map((device) => device.type)),
+          ].map((type) => ({ label: type, value: type }));
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'خطأ',
+            detail: 'فشل تحميل الأجهزة.',
+          });
+        },
+      });
   }
 
   selectDevice(device: DevicesDto): void {
@@ -78,52 +106,59 @@ export class DeviceListComponent implements OnInit {
   }
 
   showOperations(device: DevicesDto): void {
-    this.deviceService.getById(device.id!).subscribe({
-      next: (response) => {
-        this.operations = response.operationsDtos.map(op => ({
-          operationName: op.operationName || op.operationName,
-          oldValue: op.oldValue || op.oldValue,
-          newValue: op.newValue || op.newValue,
-          comment: op.comment,
-          userName: op.userName || op.userName,
-          createdAt: op.createdAt || op.createdAt
-        }));
-        console.log('Mapped operations:', this.operations); // Debug
-        this.dialogRef = this.dialogService.open(OperationListComponent, {
-          header: 'العمليات',
-          width: '70%',
-          contentStyle: { direction: 'rtl', padding: '1rem' },
-          data: { operations: this.operations }
-        });
-      },
-      error: (error) => {
-        console.error('Error fetching operations:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'خطأ',
-          detail: 'فشل جلب العمليات. حاول مرة أخرى.'
-        });
-      }
-    });
+    this.deviceService
+      .getById(device.id!)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.operations = response.operationsDtos.map((op: OperationDto) => ({
+            operationName: op.operationName,
+            oldValue: op.oldValue || '',
+            newValue: op.newValue || '',
+            comment: op.comment || '',
+            userName: op.userName || '',
+            createdAt: op.createdAt,
+          }));
+          this.dialogRef = this.dialogService.open(OperationListComponent, {
+            header: 'العمليات',
+            width: '70%',
+            contentStyle: { direction: 'rtl', padding: '1rem' },
+            data: { operations: this.operations },
+          });
+        },
+        error: (error) => {
+          console.error('Error fetching operations:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'خطأ',
+            detail: 'فشل جلب العمليات. حاول مرة أخرى.',
+          });
+        },
+      });
   }
-  applyFilter(): void {
-    let filtered = this.devices;
 
+  applyFilter(): void {
+    let filtered = [...this.devices];
     if (this.globalSearchQuery.trim()) {
       const query = this.globalSearchQuery.toLowerCase();
-      filtered = filtered.filter(device =>
-        ['source', 'brotherName', 'laptopName', 'systemPassword', 'windowsPassword',
-          'hardDrivePassword', 'freezePassword', 'code', 'card', 'serialNumber', 'type']
-          .some(key => device[key]?.toLowerCase().includes(query))
+      filtered = filtered.filter((device) =>
+        this.searchableFields.some((key) =>
+          (device[key] as string)?.toLowerCase().includes(query)
+        )
       );
     }
 
-    filtered = filtered.filter(device =>
-      (!this.searchCriteria.laptopName ||
-        device.laptopName.toLowerCase().includes(this.searchCriteria.laptopName.toLowerCase())) &&
-      (!this.searchCriteria.serialNumber ||
-        device.serialNumber.toLowerCase().includes(this.searchCriteria.serialNumber.toLowerCase())) &&
-      (!this.searchCriteria.type || device.type === this.searchCriteria.type)
+    filtered = filtered.filter(
+      (device) =>
+        (!this.searchCriteria.laptopName ||
+          device.laptopName
+            .toLowerCase()
+            .includes(this.searchCriteria.laptopName.toLowerCase())) &&
+        (!this.searchCriteria.serialNumber ||
+          device.serialNumber
+            .toLowerCase()
+            .includes(this.searchCriteria.serialNumber.toLowerCase())) &&
+        (!this.searchCriteria.type || device.type === this.searchCriteria.type)
     );
 
     this.filteredDevices = filtered;
@@ -132,177 +167,240 @@ export class DeviceListComponent implements OnInit {
   clearSearch(): void {
     this.globalSearchQuery = '';
     this.searchCriteria = { laptopName: '', serialNumber: '', type: '' };
-    this.filters = {
-      global: { value: null, matchMode: 'contains' },
-      source: { value: null, matchMode: 'contains' },
-      brotherName: { value: null, matchMode: 'contains' },
-      laptopName: { value: null, matchMode: 'contains' },
-      type: { value: null, matchMode: 'equals' },
-      serialNumber: { value: null, matchMode: 'contains' },
-      isActive: { value: null, matchMode: 'equals' },
-      createdAt: { value: null, matchMode: 'dateIs' }
-    };
-    this.filteredDevices = this.devices;
+    this.filteredDevices = [...this.devices];
   }
 
-
   deleteDevice(): void {
-    if (this.selectedDevice) {
-      this.deviceService.delete(this.selectedDevice.id!).subscribe(() => {
-        this.devices = this.devices.filter(device => device.id !== this.selectedDevice?.id);
-        this.filteredDevices = this.filteredDevices.filter(device => device.id !== this.selectedDevice?.id);
-        this.selectedDevice = null;
-        this.operations = [];
+    if (!this.selectedDevice?.id) return;
+
+    this.deviceService
+      .delete(this.selectedDevice.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.devices = this.devices.filter(
+            (device) => device.id !== this.selectedDevice?.id
+          );
+          this.filteredDevices = this.filteredDevices.filter(
+            (device) => device.id !== this.selectedDevice?.id
+          );
+          this.selectedDevice = null;
+          this.operations = [];
+          this.messageService.add({
+            severity: 'success',
+            summary: 'نجاح',
+            detail: 'تم حذف الجهاز بنجاح.',
+          });
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'خطأ',
+            detail: 'فشل حذف الجهاز. حاول مرة أخرى.',
+          });
+        },
       });
-    }
   }
 
   exportToExcel(): void {
-    //show message `file download` dialog
-    this.messageService.add({ severity: 'info', summary: 'جاري التحميل', detail: 'جاري تحميل ملف Excel...' });
+    this.messageService.add({
+      severity: 'info',
+      summary: 'جاري التحميل',
+      detail: 'جاري تحميل ملف Excel...',
+    });
 
-    // Map filteredDevices to the desired Excel format
-    const data = this.filteredDevices.map(device => ({
+    const data = this.filteredDevices.map((device) => ({
+      الجهة: device.source,
       'اسم اللاب توب': device.laptopName,
-      'الرقم التسلسلي': device.serialNumber,
-      'النوع': device.type,
-      'الجهة': device.source,
       'اسم الأخ': device.brotherName,
       'كلمة مرور النظام': device.systemPassword,
       'كلمة مرور ويندوز': device.windowsPassword,
       'كلمة التشفير': device.hardDrivePassword,
       'كلمة التجميد': device.freezePassword,
+      'الرقم التسلسلي': device.serialNumber,
+      'النوع': device.type,
       'الكود': device.code,
       'الكرت': device.card,
+      'ملاحظة': device.comment,
+      'رقم التواصل': device.contactNumber,
+      'تم بواسطة': device.userName,
       'تاريخ الإنشاء': device.createdAt.toString(),
     }));
 
-    // Create worksheet from data
     const worksheet = XLSX.utils.json_to_sheet(data);
-
-    // Create workbook and append worksheet
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'الأجهزة');
 
-    // Generate Excel file
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-    // Create a temporary URL and trigger download
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
+    const blob = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = 'devices.xlsx';
     document.body.appendChild(link);
     link.click();
-
-    // Clean up
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
   }
 
-  importDevices(): void {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.xlsx, .xls';
-    fileInput.onchange = (event: any) => {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-        // Map Excel data to DevicesDto
-        // const devices: DevicesDto[] = jsonData.map((row: any) => ({
-        //   id: null, // ID should be generated by backend
-        //   laptopName: row['اسم اللاب توب'] || '',
-        //   serialNumber: row['الرقم التسلسلي'] || '',
-        //   type: row['النوع'] || '',
-        //   source: row['الجهة'] || '',
-        //   brotherName: row['اسم الأخ'] || '',
-        //   systemPassword: row['كلمة مرور النظام'] || '',
-        //   windowsPassword: row['كلمة مرور ويندوز'] || '',
-        //   hardDrivePassword: row['كلمة التشفير'] || '',
-        //   freezePassword: row['كلمة التجميد'] || '',
-        //   code: row['الكود'] || '',
-        //   card: row['الكرت'] || '',
-        //   createdAt: row['تاريخ الإنشاء'] || new Date().toISOString(),
-        // }));
-
-        // Send to DeviceService
-        // this.deviceService.importDevices(devices).subscribe({
-        //   next: (newDevices) => {
-        //     this.devices = [...this.devices, ...newDevices];
-        //     this.filteredDevices = [...this.devices];
-        //     this.messageService.add({ severity: 'success', summary: 'نجاح', detail: 'تم استيراد الأجهزة بنجاح!' });
-        //   },
-        //   error: (err) => {
-        //     console.error('Error importing devices:', err);
-        //     this.messageService.add({ severity: 'error', summary: 'خطأ', detail: 'فشل استيراد الأجهزة.' });
-        //   }
-        // });
-      };
-      reader.readAsArrayBuffer(file);
-    };
-    fileInput.click();
+  onFileSelected(event: FileSelectEvent): void {
+    const input = event;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+      this.uploadFile();
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'تحذير',
+        detail: 'لم يتم اختيار أي ملف.'
+      });
+    }
   }
 
-
-  toggleDarkMode(): void {
-    this.darkMode = !this.darkMode;
-  }
-
-  addOperation(deviceId: number): void {
-    const device = this.devices.find(d => d.id === deviceId);
-    if (!device) {
-      this.messageService.add({ severity: 'error', summary: 'خطأ', detail: 'الجهاز غير موجود!' });
+  uploadFile(): void {
+    if (!this.selectedFile) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'تحذير',
+        detail: 'يرجى اختيار ملف Excel أولاً'
+      });
       return;
     }
 
-    // Open modal for adding operation
+    const validMimeTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel' // .xls
+    ];
+    const validExtensions = ['.xlsx', '.xls'];
+    const fileExtension = this.selectedFile.name.toLowerCase().slice(this.selectedFile.name.lastIndexOf('.'));
+
+    if (!validMimeTypes.includes(this.selectedFile.type) || !validExtensions.includes(fileExtension)) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'خطأ',
+        detail: 'الملف غير صالح. يرجى اختيار ملف Excel (.xlsx أو .xls)'
+      });
+      this.selectedFile = null;
+      return;
+    }
+
+    this.loading = true;
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+
+    this.deviceService.uploadFile(formData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: BaseResponse<number>) => {
+          if (response.success) {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'نجاح',
+              detail: response.message || `تم رفع الملف بنجاح. تمت إضافة ${response.data} جهاز${response.data === 1 ? '' : ' أجهزة'}.`
+            });
+            this.selectedFile = null;
+            this.loadDevices();
+          } else {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'خطأ',
+              detail: response.message || 'فشل رفع الملف',
+              life: 10000
+            });
+          }
+          this.loading = false;
+        },
+        error: (err: Error) => {
+          this.loading = false;
+          this.selectedFile = null;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'خطأ',
+            detail: err.message || 'حدث خطأ أثناء رفع الملف'
+          });
+        }
+      });
+  }
+
+
+  triggerFileSelect(): void {
+    if (this.fileInput) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+  addOperation(deviceId: number): void {
+    const device = this.devices.find((d) => d.id === deviceId);
+    if (!device) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'خطأ',
+        detail: 'الجهاز غير موجود!',
+      });
+      return;
+    }
+
     this.dialogRef = this.dialogService.open(AddOperationDialogComponent, {
       header: 'إضافة عملية جديدة',
       width: '35%',
-      contentStyle: { 'direction': 'rtl', 'padding': '1rem' },
-      data: { deviceId, deviceName: device.laptopName }
+      contentStyle: { direction: 'rtl', padding: '1rem' },
+      data: { deviceId, deviceName: device.laptopName },
     });
 
-    // Handle modal close
-    this.dialogRef.onClose.subscribe((operationData: Partial<CreateOperation>) => {
-      if (operationData) {
-        const newOperation: CreateOperation = {
-          deviceId,
-          operationName: operationData.operationName!,
-          oldValue: operationData.oldValue || null,
-          newValue: operationData.newValue || null,
-          comment: operationData.comment || null
-        };
+    this.dialogRef.onClose
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((operationData: Partial<CreateOperation>) => {
+        if (operationData) {
+          const newOperation: CreateOperation = {
+            deviceId,
+            operationName: operationData.operationName!,
+            oldValue: operationData.oldValue || null,
+            newValue: operationData.newValue || null,
+            comment: operationData.comment || null,
+          };
 
-        this.operationService.addOperation(newOperation).subscribe({
-          next: () => {
-            this.messageService.add({ severity: 'success', summary: 'نجاح', detail: 'تم إضافة العملية بنجاح!' });
-            if (this.selectedDevice?.id === deviceId) {
-              this.deviceService.getById(deviceId).subscribe((response) => {
-                this.operations = response.operationsDtos;
-              });
-            }
-          },
-          error: (err) => {
-            console.error('Error adding operation:', err);
-            this.messageService.add({ severity: 'error', summary: 'خطأ', detail: 'فشل إضافة العملية. حاول مرة أخرى.' });
-          }
-        });
-      }
-    });
+          this.operationService
+            .addOperation(newOperation)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => {
+                this.messageService.add({
+                  severity: 'success',
+                  summary: 'نجاح',
+                  detail: 'تم إضافة العملية بنجاح!',
+                });
+                if (this.selectedDevice?.id === deviceId) {
+                  this.deviceService
+                    .getById(deviceId)
+                    .pipe(takeUntil(this.destroy$))
+                    .subscribe((response) => {
+                      this.operations = response.operationsDtos;
+                    });
+                }
+              },
+              error: (err) => {
+                console.error('Error adding operation:', err);
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'خطأ',
+                  detail: 'فشل إضافة العملية. حاول مرة أخرى.',
+                });
+              },
+            });
+        }
+      });
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     if (this.dialogRef) {
       this.dialogRef.close();
       this.dialogRef = null;
     }
   }
-
 }
