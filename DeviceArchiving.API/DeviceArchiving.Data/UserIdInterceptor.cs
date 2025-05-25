@@ -49,7 +49,7 @@ public class UserIdInterceptor : ISaveChangesInterceptor
 
         foreach (var entry in entries)
         {
-            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            if (entry.State == EntityState.Added)
             {
                 entry.Entity.UserId = userId;
             }

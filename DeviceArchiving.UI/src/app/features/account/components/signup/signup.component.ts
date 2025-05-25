@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AccountService, AuthenticationRequest } from '../../../../core/services/account.service';
+
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { BaseResponse } from '../../../../core/models/update-device.model';
+import { AccountService } from '../../../../core/services/account.service';
+import { AuthenticationRequest } from '../../../../core/models/authentication.model';
 
 @Component({
   selector: 'app-signup',

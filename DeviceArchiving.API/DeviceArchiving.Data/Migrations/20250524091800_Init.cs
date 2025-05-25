@@ -55,7 +55,7 @@ namespace DeviceArchiving.Data.Migrations
                     FreezePassword = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SerialNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SerialNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ContactNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Card = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -104,6 +104,12 @@ namespace DeviceArchiving.Data.Migrations
                         principalTable: "Users",
                         principalColumn: "Id");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Devices_SerialNumber",
+                table: "Devices",
+                column: "SerialNumber",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Devices_UserId",

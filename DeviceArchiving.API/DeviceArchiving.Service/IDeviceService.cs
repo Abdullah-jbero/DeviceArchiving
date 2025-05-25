@@ -6,12 +6,14 @@ namespace DeviceArchiving.Service;
 
 public interface IDeviceService
 {
-    Task AddDeviceAsync(CreateDeviceDto dto);
-    Task<BaseResponse<int>> AddDevicesAsync(List<CreateDeviceDto> dtos);
+    Task<BaseResponse<string>> AddDeviceAsync(CreateDeviceDto dto);
+
     Task<List<GetAllDevicesDto>> GetAllDevicesAsync();
     Task<GetDeviceDto?> GetDeviceByIdAsync(int id);
-    Task UpdateDeviceAsync(int id, UpdateDeviceDto dto);
+    Task<BaseResponse<string>> UpdateDeviceAsync(int id, UpdateDeviceDto dto);
     Task DeleteDeviceAsync(int id);
+    Task<BaseResponse<DuplicateCheckResponse>> CheckDuplicatesAsync(List<CheckDuplicateDto> items);
+    Task<BaseResponse<int>> ProcessDevicesAsync(List<DeviceUploadDto> dtos);
 }
 
 

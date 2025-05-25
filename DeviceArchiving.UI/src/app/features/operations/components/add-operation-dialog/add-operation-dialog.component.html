@@ -1,6 +1,5 @@
 
     <div class="dialog-content" dir="rtl">
-      <p-toast></p-toast>
       <h3>إضافة عملية للجهاز: {{ deviceName }}</h3>
       <form #operationForm="ngForm" (ngSubmit)="save()" *ngIf="!isLoading; else loading">
         <div class="form-group">

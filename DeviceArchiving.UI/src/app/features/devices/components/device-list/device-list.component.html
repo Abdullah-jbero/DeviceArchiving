@@ -1,4 +1,4 @@
-<p-toast position="top-center"></p-toast>
+
 <!-- Loading spinner -->
 <div class="spinner-container" *ngIf="loading">
   <p-progressSpinner class="loading"></p-progressSpinner>
@@ -7,7 +7,7 @@
 
 <div class="container" dir="rtl" *ngIf="!loading">
 
-  <!-- نموذج البحث المتقدم -->
+
   <div class="search-form">
     <h3>البحث في الأجهزة</h3>
     <div class="search-fields">
@@ -24,7 +24,7 @@
 
     </div>
   </div>
-  <!-- زر إضافة جهاز جديد -->
+
   <div class="button-container">
     <p-button label="إضافة جهاز" routerLink="add" styleClass="p-button-success add-button" />
     <p-button label="تعديل جهاز" icon="pi pi-pencil" [routerLink]="selectedDevice ? ['edit', selectedDevice.id] : null"
@@ -33,21 +33,16 @@
     <p-button label="حذف جهاز" icon="pi pi-trash" (click)="deleteDevice()" styleClass="p-button-danger "
       [disabled]="!selectedDevice" />
 
-    <p-button label="تصدير" icon="pi pi-file-export" (click)="exportToExcel()"
-      styleClass="p-button-info " />
+    <p-button label="تصدير" icon="pi pi-file-export" (click)="exportToExcel()" styleClass="p-button-info " />
 
     <p-fileUpload #fileInput mode="basic" accept=".xlsx,.xls" (onSelect)="onFileSelected($event)" [disabled]="loading"
-      styleClass="p-button-secondary " chooseLabel="اختر ملف Excel"></p-fileUpload>
+      styleClass="p-button-secondary" chooseLabel="اختر ملف Excel" aria-label="تحميل ملف Excel"></p-fileUpload>
 
     <p-button label="اضافة العمليات" styleClass="p-button-success" [disabled]="!selectedDevice"
       (click)="addOperation(selectedDevice!.id!)" />
 
-
-
-
   </div>
 
-  <!-- تخطيط الجدول والتفاصيل -->
   <div class="content-wrapper">
     <!-- جدول الأجهزة -->
     <div class="table-container">
@@ -92,7 +87,7 @@
               <p-columnFilter type="text" field="serialNumber" display="menu"></p-columnFilter>
             </th>
             <th pSortableColumn="comment" style="width:auto;">
-              ملاحظة <p-sortIcon field="comment" />
+              ملاحظات <p-sortIcon field="comment" />
               <p-columnFilter type="text" field="comment" display="menu"></p-columnFilter>
             </th>
             <th pSortableColumn="contactNumber" style="width:auto;">
@@ -139,5 +134,85 @@
       </p-table>
     </div>
   </div>
+
+
+
+  <!-- Dialog for previewing Excel data -->
+  <p-dialog header="معاينة بيانات Excel" [(visible)]="displayDialog" [modal]="true" [style]="{ width: '90vw' }"
+    [draggable]="false" [resizable]="false" aria-labelledby="dialog-title">
+    <div *ngIf="excelData.length > 0; else noData" class="table-container">
+      <p-table [value]="excelData" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true" scrollHeight="90vw"
+        aria-describedby="device-table-description">
+        <ng-template pTemplate="header">
+          <tr>
+            <th scope="col" style="width: 80px">تحديد</th>
+            <th scope="col">المصدر</th>
+            <th scope="col">اسم الأخ</th>
+            <th scope="col">اسم اللاب توب</th>
+            <th scope="col">كلمة مرور النظام</th>
+            <th scope="col">كلمة مرور Windows</th>
+            <th scope="col">كلمة مرور القرص</th>
+            <th scope="col">كلمة مرور التجميد</th>
+            <th scope="col">الكود</th>
+            <th scope="col">النوع</th>
+            <th scope="col">الرقم التسلسلي</th>
+            <th scope="col">البطاقة</th>
+            <th scope="col">ملاحظات</th>
+            <th scope="col">رقم التواصل</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-device let-i="index">
+          <tr
+            [ngClass]="{ 'duplicate-serial': device.isDuplicateSerial,'duplicate-laptop': device.isDuplicateLaptopName && !device.isDuplicateSerial}"
+            role="row">
+            <td>
+              <input type="checkbox" [checked]="device.isSelected" (change)="onCheckboxChange($event, device)" />
+
+
+
+            </td>
+            <td>{{ device.source }}</td>
+            <td>{{ device.brotherName }}</td>
+            <td>{{ device.laptopName }}</td>
+            <td>{{ device.systemPassword }}</td>
+            <td>{{ device.windowsPassword }}</td>
+            <td>{{ device.hardDrivePassword }}</td>
+            <td>{{ device.freezePassword }}</td>
+            <td>{{ device.code }}</td>
+            <td>{{ device.type }}</td>
+            <td>{{ device.serialNumber }}</td>
+            <td>{{ device.card }}</td>
+            <td>{{ device.comment }}</td>
+            <td>{{ device.contactNumber }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+      <div id="device-table-description" class="sr-only">
+        جدول يعرض بيانات الأجهزة المستوردة من ملف Excel مع إمكانية تحديد الأجهزة للرفع.
+        الصفوف ذات الأرقام التسلسلية المكررة تظهر باللون الأحمر، وذات أسماء اللاب توب المكررة تظهر باللون البرتقالي.
+      </div>
+    </div>
+
+
+    <ng-template #noData>
+      <p class="no-data-message">لا توجد بيانات لعرضها.</p>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer">
+        <p-button label="تحديد الكل" icon="pi pi-check-square" styleClass="p-button-secondary" (onClick)="selectAll()"
+          [disabled]="loading" aria-label="تحديد كافة الأجهزة غير المكررة"></p-button>
+        <p-button label="إلغاء تحديد الكل" icon="pi pi-times-circle" styleClass="p-button-secondary"
+          (onClick)="deselectAll()" [disabled]="loading" aria-label="إلغاء تحديد كافة الأجهزة"></p-button>
+        <p-button label="إلغاء" icon="pi pi-times" styleClass="p-button-text p-button-danger"
+          (onClick)="displayDialog = false" [disabled]="loading" aria-label="إغلاق نافذة المعاينة"></p-button>
+        <p-button label="رفع الأجهزة المحددة" icon="pi pi-check" styleClass="p-button-primary"
+          (onClick)="uploadSelectedDevices()" [disabled]="loading" [loading]="loading"
+          aria-label="رفع الأجهزة المحددة إلى قاعدة البيانات"></p-button>
+      </div>
+    </ng-template>
+
+
+  </p-dialog>
 
 </div>

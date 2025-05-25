@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeviceArchiving.Data.Migrations
 {
     [DbContext(typeof(DeviceArchivingContext))]
-    [Migration("20250522121641_Init")]
+    [Migration("20250524091800_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -71,7 +71,7 @@ namespace DeviceArchiving.Data.Migrations
 
                     b.Property<string>("SerialNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -96,6 +96,9 @@ namespace DeviceArchiving.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SerialNumber")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 

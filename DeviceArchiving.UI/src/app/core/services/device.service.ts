@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { DevicesDto, DeviceDto } from '../models/device.model';
+import { DevicesDto, DeviceDto, CheckDuplicateDto, DuplicateCheckResponse, DeviceUploadDto } from '../models/device.model';
 import { CreateDeviceDto } from '../models/create-device.model';
 import { BaseResponse, UpdateDeviceDto } from '../models/update-device.model';
 
@@ -15,11 +15,7 @@ export class DeviceService {
 
   constructor(private readonly http: HttpClient) { }
 
-  uploadFile(formData: FormData): Observable<BaseResponse<number>> {
-    return this.http.post<BaseResponse<number>>(`${this.apiUrl}/upload`, formData).pipe(
-      catchError(this.handleError)
-    );
-  }
+
 
   getAll(): Observable<DevicesDto[]> {
     return this.http.get<DevicesDto[]>(this.apiUrl)
@@ -31,23 +27,14 @@ export class DeviceService {
       .pipe(catchError(this.handleError));
   }
 
-  create(device: CreateDeviceDto): Observable<void> {
-    return this.http.post<void>(this.apiUrl, device)
-      .pipe(catchError(this.handleError));
+  create(device: CreateDeviceDto): Observable<BaseResponse<void>> {
+    return this.http.post<BaseResponse<void>>(this.apiUrl, device)
+      .pipe(
+        catchError(this.handleError)
+      );
   }
 
-  update(id: number, device: UpdateDeviceDto): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}`, device)
-      .pipe(catchError(this.handleError));
-  }
-
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`)
-      .pipe(catchError(this.handleError));
-  }
-
-
-  private handleError(error: HttpErrorResponse): Observable<never> {
+    private handleError(error: HttpErrorResponse): Observable<never> {
     console.error('An error occurred:', error);
     let errorMessage = 'حدث خطأ غير متوقع';
 
@@ -63,6 +50,30 @@ export class DeviceService {
 
     return throwError(() => new Error(errorMessage));
   }
+
+
+  update(id: number, device: UpdateDeviceDto): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, device)
+      .pipe(catchError(this.handleError));
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  checkDuplicates(items: CheckDuplicateDto[]): Observable<BaseResponse<DuplicateCheckResponse>> {
+    return this.http.post<BaseResponse<DuplicateCheckResponse>>(`${this.apiUrl}/check-duplicates`, items)
+      .pipe(catchError(this.handleError));
+  }
+
+
+  uploadDevices(devices: DeviceUploadDto[]): Observable<BaseResponse<number>> {
+    return this.http.post<BaseResponse<number>>(`${this.apiUrl}/upload-devices`, devices).pipe(
+      catchError(this.handleError)
+    );
+  }
+
 
 
 }

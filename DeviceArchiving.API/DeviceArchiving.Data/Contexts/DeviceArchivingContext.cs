@@ -24,5 +24,7 @@ public class DeviceArchivingContext : DbContext
 
         modelBuilder.Entity<Device>()
             .HasQueryFilter(d => d.IsActive == true);
+
+        modelBuilder.Entity<Device>().HasIndex(u => u.SerialNumber).IsUnique();
     }
 }

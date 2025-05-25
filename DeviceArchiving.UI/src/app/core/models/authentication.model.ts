@@ -3,3 +3,8 @@ export interface AuthenticationResponse {
     userName: string;
     picture: string;
 }
+
+export interface AuthenticationRequest {
+  email: string;
+  password: string;
+}

@@ -1,5 +1,4 @@
 <div class="form-container" dir="rtl">
-  <p-toast></p-toast>
   <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading; else loading">
     <h2>{{ isEditMode ? 'تعديل نوع العملية' : 'إضافة نوع العملية' }}</h2>
     <div class="form-group">

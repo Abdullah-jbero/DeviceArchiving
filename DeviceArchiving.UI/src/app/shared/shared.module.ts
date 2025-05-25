@@ -23,6 +23,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DynamicDialogModule } from 'primeng/dynamicdialog';
+import { DialogModule } from 'primeng/dialog';
 @NgModule({
   declarations: [
     HeaderComponent
@@ -83,7 +84,8 @@ import { DynamicDialogModule } from 'primeng/dynamicdialog';
     MatRippleModule,
     MatFormFieldModule,
     MatCardModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    DialogModule
   ]
 })
 export class SharedModule { }

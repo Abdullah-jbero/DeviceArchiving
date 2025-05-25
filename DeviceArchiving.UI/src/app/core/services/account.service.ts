@@ -3,14 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { AuthenticationResponse } from '../models/authentication.model';
+import { AuthenticationRequest, AuthenticationResponse } from '../models/authentication.model';
 import { Router } from '@angular/router';
 import { BaseResponse } from '../models/update-device.model';
-
-export interface AuthenticationRequest {
-  email: string;
-  password: string;
-}
+import { BehaviorSubject } from 'rxjs';
 
 
 
@@ -19,6 +15,13 @@ export interface AuthenticationRequest {
 })
 export class AccountService {
   private readonly apiUrl: string = `${environment.apiBaseUrl}/api/Account`;
+
+  private userInfoSubject = new BehaviorSubject<{ userName: string | null; picture: string | null }>({
+    userName: sessionStorage.getItem('userName'),
+    picture: sessionStorage.getItem('userPicture')
+  });
+
+  userInfo$ = this.userInfoSubject.asObservable();
 
   constructor(
     private readonly http: HttpClient,
@@ -43,12 +46,12 @@ export class AccountService {
     );
   }
 
-
-
   saveUserInfo(token: string, userName: string, base64Image: string): void {
     sessionStorage.setItem('authToken', token);
     sessionStorage.setItem('userName', userName);
     sessionStorage.setItem('userPicture', base64Image);
+
+    this.userInfoSubject.next({ userName, picture: base64Image });
   }
 
   getUserInfo(): { token: string | null; userName: string | null; picture: string | null } {
@@ -69,6 +72,7 @@ export class AccountService {
 
   clearSession(): void {
     sessionStorage.clear();
+    this.userInfoSubject.next({ userName: null, picture: null });
   }
 
   logout(): void {

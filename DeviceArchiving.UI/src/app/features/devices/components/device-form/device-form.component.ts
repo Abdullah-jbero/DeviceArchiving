@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DeviceService } from '../../../../core/services/device.service';
 import { DevicesDto } from '../../../../core/models/device.model';
 import { CreateDeviceDto } from '../../../../core/models/create-device.model';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-device-form',
@@ -21,7 +22,8 @@ export class DeviceFormComponent implements OnInit {
     private fb: FormBuilder,
     private deviceService: DeviceService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private readonly messageService: MessageService,
   ) {
     this.form = this.fb.group({
       source: ['', Validators.required],
@@ -95,7 +97,7 @@ export class DeviceFormComponent implements OnInit {
       card: this.form.value.card,
       comment: this.form.value.comment || null,
       contactNumber: this.form.value.contactNumber || null
-      // Note: userName and createdAt are assumed to be handled by the backend
+
     };
 
     if (this.isEditMode && this.deviceId) {
@@ -105,8 +107,12 @@ export class DeviceFormComponent implements OnInit {
           this.router.navigate(['/devices']);
         },
         error: (err) => {
-          console.error('Error updating device:', err);
-          this.loading = true;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'خطأ',
+            detail: err.message || 'حدث خطأ في تحديث الجهاز',
+          });
+          this.loading = false;
           // Optionally show a toast notification
         }
       });
@@ -117,8 +123,12 @@ export class DeviceFormComponent implements OnInit {
           this.router.navigate(['/devices']);
         },
         error: (err) => {
-          console.error('Error creating device:', err);
-          this.loading = true;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'خطأ',
+            detail: err.message || 'حدث خطأ في انشاء الجهاز',
+          });
+          this.loading = false;
           // Optionally show a toast notification
 
         }

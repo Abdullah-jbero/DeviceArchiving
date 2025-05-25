@@ -6,8 +6,6 @@
   font-family: Arial, sans-serif;
 }
 
-
-
 .search-form {
   margin-bottom: 20px;
 }
@@ -103,7 +101,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.8); /* Optional: semi-transparent overlay */
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.8
+  ); /* Optional: semi-transparent overlay */
   z-index: 1000; /* Ensure it appears above other content */
 }
 
@@ -118,8 +121,17 @@ p-fileUpload {
 
 
 
+.duplicate-serial {
+  background-color: #ffe6e6; 
+  color: #d32f2f;
+}
 
-/* تصميم متجاوب */
+.duplicate-laptop {
+  background-color: #fff3e0; 
+  color: #f57c00; 
+}
+
+
 @media (max-width: 768px) {
   .content-wrapper {
     flex-direction: column;
@@ -136,7 +148,6 @@ p-fileUpload {
 }
 
 ::ng-deep .selected-row {
-  background-color: #87CEEB !important;
-  color: #000 !important; 
+  background-color: #87ceeb !important;
+  color: #000 !important;
 }
-
