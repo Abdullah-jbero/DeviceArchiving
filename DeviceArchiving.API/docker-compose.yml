@@ -1,0 +1,6 @@
+services:
+  devicearchiving.api:
+    image: ${DOCKER_REGISTRY-}devicearchivingapi
+    build:
+      context: .
+      dockerfile: DeviceArchiving.Api\Dockerfile

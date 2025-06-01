@@ -3,6 +3,9 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>58df37ab-5d56-4e62-bfc5-27b749da696f</UserSecretsId>
+		<DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
+		<DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" Version="0.105.0" />
@@ -10,6 +13,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.3" />
 	</ItemGroup>
 	<ItemGroup>

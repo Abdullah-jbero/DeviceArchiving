@@ -30,29 +30,16 @@ services.AddScoped<UserIdInterceptor>();
 services.AddDbContext<DeviceArchivingContext>((serviceProvider, options) =>
 {
     var userIdInterceptor = serviceProvider.GetRequiredService<UserIdInterceptor>();
-    var dbProvider = configuration.GetValue<string>("DatabaseProvider")?.ToLower();
-
     var connectionString = configuration.GetConnectionString("DefaultConnection");
 
     if (string.IsNullOrEmpty(connectionString))
-    {
         throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
-    }
 
-    switch (dbProvider)
-    {
-        case "sqlite":
-            options.UseSqlite(connectionString);
-            break;
-        case "sqlserver":
-            options.UseSqlServer(connectionString);
-            break;
-        default:
-            throw new InvalidOperationException("Invalid or missing 'DatabaseProvider' in configuration. Use 'sqlite' or 'sqlserver'.");
-    }
-
+    options.UseSqlServer(connectionString);
     options.AddInterceptors(userIdInterceptor);
 });
+
+
 
 // Bind JwtSettings
 services.Configure<JwtSettings>(
@@ -80,49 +67,49 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Read allowed origins from configuration
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("CorsPolicy", policy =>
-//    {
-//        policy.WithOrigins(allowedOrigins!)
-//              .AllowAnyMethod()
-//              .AllowAnyHeader()
-//              .AllowCredentials()
-//              .WithExposedHeaders("x-pagination", "Authorization");
-//    });
-//});
-
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins!)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials()
+              .WithExposedHeaders("x-pagination", "Authorization");
     });
 });
+
+
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("CorsPolicy", policy =>
+//    {
+//        policy.AllowAnyOrigin()
+//              .AllowAnyMethod()
+//              .AllowAnyHeader();
+//    });
+//});
 
 var app = builder.Build();
 
 
 
 //⚙️ Apply Migrations in Production
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<DeviceArchivingContext>();
-    try
-    {
-        // Apply any pending migrations
-        dbContext.Database.Migrate();
-        app.Logger.LogInformation("Database migrations applied successfully.");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "An error occurred while applying database migrations.");
-        throw; // Optionally, stop the application if migrations fail
-    }
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var dbContext = scope.ServiceProvider.GetRequiredService<DeviceArchivingContext>();
+//    try
+//    {
+//        // Apply any pending migrations
+//        dbContext.Database.Migrate();
+//        app.Logger.LogInformation("Database migrations applied successfully.");
+//    }
+//    catch (Exception ex)
+//    {
+//        app.Logger.LogError(ex, "An error occurred while applying database migrations.");
+//        throw; // Optionally, stop the application if migrations fail
+//    }
+//}
 
 app.UseCors("CorsPolicy");
 
