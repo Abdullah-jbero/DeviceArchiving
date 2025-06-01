@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeviceArchiving.Data.Migrations
 {
     [DbContext(typeof(DeviceArchivingContext))]
-    [Migration("20250524091800_Init")]
+    [Migration("20250531142805_Init")]
     partial class Init
     {
         /// <inheritdoc />

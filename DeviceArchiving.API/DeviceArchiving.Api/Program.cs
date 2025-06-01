@@ -24,8 +24,6 @@ services.AddScoped<IOperationService, OperationService>();
 services.AddScoped<IOperationTypeService, OperationTypeService>();
 services.AddScoped<IAccountService, AccountService>();
 
-
-
 // 🗄️ Database (SQLite or SQL Server based on configuration)
 services.AddHttpContextAccessor();
 services.AddScoped<UserIdInterceptor>();
@@ -79,50 +77,63 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 // Read allowed origins from configuration
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("CorsPolicy", policy =>
+//    {
+//        policy.WithOrigins(allowedOrigins!)
+//              .AllowAnyMethod()
+//              .AllowAnyHeader()
+//              .AllowCredentials()
+//              .WithExposedHeaders("x-pagination", "Authorization");
+//    });
+//});
+
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.WithOrigins(allowedOrigins!)
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials()
-              .WithExposedHeaders("x-pagination", "Authorization");
+              .AllowAnyHeader();
     });
 });
 
-
 var app = builder.Build();
 
-// ⚙️ Apply Migrations in Production
-//using (var scope = app.Services.CreateScope())
-//{
-//    var dbContext = scope.ServiceProvider.GetRequiredService<DeviceArchivingContext>();
-//    try
-//    {
-//        // Apply any pending migrations
-//        dbContext.Database.Migrate();
-//        app.Logger.LogInformation("Database migrations applied successfully.");
-//    }
-//    catch (Exception ex)
-//    {
-//        app.Logger.LogError(ex, "An error occurred while applying database migrations.");
-//        throw; // Optionally, stop the application if migrations fail
-//    }
-//}
 
+
+//⚙️ Apply Migrations in Production
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DeviceArchivingContext>();
+    try
+    {
+        // Apply any pending migrations
+        dbContext.Database.Migrate();
+        app.Logger.LogInformation("Database migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred while applying database migrations.");
+        throw; // Optionally, stop the application if migrations fail
+    }
+}
 
 app.UseCors("CorsPolicy");
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.MapFallbackToFile("index.html");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.Run();
+
+
