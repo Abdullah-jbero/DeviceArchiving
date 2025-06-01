@@ -10,10 +10,20 @@ using System.Threading.Tasks;
 
 namespace DeviceArchiving.Service;
 
-public class DeviceService(DeviceArchivingContext context) : IDeviceService
+public class DeviceService : IDeviceService
 {
+
+    private readonly IDbContextFactory<DeviceArchivingContext> _contextFactory;
+
+    public DeviceService(IDbContextFactory<DeviceArchivingContext> contextFactory)
+    {
+        _contextFactory = contextFactory;
+    }
+
     public async Task<BaseResponse<string>> AddDeviceAsync(CreateDeviceDto dto)
     {
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var existingDevice = await context.Devices
             .AnyAsync(d => d.SerialNumber == dto.SerialNumber || d.LaptopName == dto.LaptopName);
 
@@ -49,6 +59,7 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
 
     public async Task<BaseResponse<string>> UpdateDeviceAsync(int id, UpdateDeviceDto dto)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var device = await context.Devices.Include(d => d.Operations).FirstOrDefaultAsync(d => d.Id == id);
         if (device == null)
             return BaseResponse<string>.Failure("الجهاز غير موجود");
@@ -97,6 +108,7 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
             var serialNumbers = items.Select(i => i.SerialNumber).Where(sn => !string.IsNullOrEmpty(sn)).ToList();
             var laptopNames = items.Select(i => i.LaptopName).Where(ln => !string.IsNullOrEmpty(ln)).ToList();
 
+            await using var context = await _contextFactory.CreateDbContextAsync();
             var existingSerials = await context.Devices
                 .Where(d => serialNumbers.Contains(d.SerialNumber))
                 .Select(d => d.SerialNumber)
@@ -148,6 +160,7 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
             const int batchSize = 100;
 
             // Process updates
+            await using var context = await _contextFactory.CreateDbContextAsync();
             var updateDevices = dtos.Where(d => d.IsUpdate).ToList();
             if (updateDevices.Any())
             {
@@ -229,6 +242,7 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
 
     public async Task<List<GetAllDevicesDto>> GetAllDevicesAsync()
     {
+        await using var context = await _contextFactory.CreateDbContextAsync();
         return await context.Devices
             .Where(d => d.IsActive)
             .Include(d => d.User)
@@ -257,6 +271,7 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
 
     public async Task<GetDeviceDto?> GetDeviceByIdAsync(int id)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var device = await context.Devices
             .Include(d => d.User)
             .FirstOrDefaultAsync(d => d.Id == id);
@@ -300,6 +315,7 @@ public class DeviceService(DeviceArchivingContext context) : IDeviceService
 
     public async Task DeleteDeviceAsync(int id)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var device = await context.Devices
             .Include(d => d.Operations)
             .FirstOrDefaultAsync(d => d.Id == id);

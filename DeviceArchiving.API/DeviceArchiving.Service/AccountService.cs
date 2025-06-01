@@ -13,40 +13,32 @@ namespace DeviceArchiving.Service
 {
     public class AccountService : IAccountService
     {
-        private readonly DeviceArchivingContext _context;
+        private readonly IDbContextFactory<DeviceArchivingContext> _contextFactory;
         private readonly JwtSettings _jwtSettings;
 
-        public AccountService(DeviceArchivingContext context, IOptions<JwtSettings> jwtOptions)
+        public AccountService(IDbContextFactory<DeviceArchivingContext> contextFactory, IOptions<JwtSettings> jwtOptions)
         {
-            _context = context;
+            _contextFactory = contextFactory;
             _jwtSettings = jwtOptions.Value;
         }
 
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
         public async Task<BaseResponse<AuthenticationResponse>> AuthenticateAsync(AuthenticationRequest request)
         {
             try
             {
+                using var _context = await _contextFactory.CreateDbContextAsync();
                 var userName = request.UserName.Trim().ToLower();
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName.ToLower() == userName);
 
                 if (user == null)
-                    return BaseResponse<AuthenticationResponse>.Failure($"User'{request.UserName}' not found.");
+                    return BaseResponse<AuthenticationResponse>.Failure($"User '{request.UserName}' not found.");
 
                 if (!VerifyPassword(request.Password, user.Password))
                     return BaseResponse<AuthenticationResponse>.Failure("Invalid credentials.");
 
-
                 var token = GenerateJwtToken(user);
-                var respone = AuthenticationResponse.FromUser(user, new JwtSecurityTokenHandler().WriteToken(token));
-                return BaseResponse<AuthenticationResponse>.SuccessResult(
-                    respone,
-                    "Authenticated successfully.");
+                var response = AuthenticationResponse.FromUser(user, new JwtSecurityTokenHandler().WriteToken(token));
+                return BaseResponse<AuthenticationResponse>.SuccessResult(response, "Authenticated successfully.");
             }
             catch (Exception ex)
             {
@@ -58,6 +50,7 @@ namespace DeviceArchiving.Service
         {
             try
             {
+                using var _context = await _contextFactory.CreateDbContextAsync();
                 var email = request.UserName.Trim().ToLower();
                 var exists = await _context.Users.AnyAsync(u => u.UserName.ToLower() == email);
 
@@ -105,7 +98,5 @@ namespace DeviceArchiving.Service
         private string HashPassword(string password) => BCrypt.Net.BCrypt.HashPassword(password);
 
         private bool VerifyPassword(string input, string hashed) => BCrypt.Net.BCrypt.Verify(input, hashed);
-
-    
     }
 }

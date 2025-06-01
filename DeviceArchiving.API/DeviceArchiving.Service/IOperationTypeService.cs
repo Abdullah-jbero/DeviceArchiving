@@ -1,13 +1,11 @@
 ﻿using DeviceArchiving.Data.Entities;
 
-namespace DeviceArchiving.Service
+namespace DeviceArchiving.Service;
+public interface IOperationTypeService
 {
-    public interface IOperationTypeService
-    {
-        void AddOperationType(OperationType operationType);
-        IEnumerable<OperationType> GetAllOperationsTypes(string? searchTerm);
-        void UpdateOperationType(OperationType operationType);
-        void DeleteOperationType(int id);
+    void AddOperationType(OperationType operationType);
+    IEnumerable<OperationType> GetAllOperationsTypes(string? searchTerm);
+    void UpdateOperationType(OperationType operationType);
+    void DeleteOperationType(int id);
 
-    }
 }

@@ -5,13 +5,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DeviceArchiving.Service
 {
-    public class OperationService(DeviceArchivingContext context) : IOperationService
+    public class OperationService : IOperationService
     {
+        private readonly DeviceArchivingContext _context;
+
+        public OperationService(DeviceArchivingContext context)
+        {
+            _context = context;
+        }
 
         public async Task AddOperations(CreateOperation createOperation)
         {
+            if (createOperation == null)
+                throw new ArgumentNullException(nameof(createOperation));
 
-            var operation = new Operation()
+            var operation = new Operation
             {
                 Comment = createOperation.Comment,
                 NewValue = createOperation.NewValue,
@@ -19,18 +27,17 @@ namespace DeviceArchiving.Service
                 OperationName = createOperation.OperationName,
                 DeviceId = createOperation.DeviceId,
                 CreatedAt = DateTime.Now
-
             };
-            context.Operations.Add(operation);
-            await context.SaveChangesAsync();
+
+            _context.Operations.Add(operation);
+            await _context.SaveChangesAsync();
         }
 
         public Task<List<Operation>> GetAllOperations(int deviceId)
         {
-            return context.Operations.Where(o=>o.DeviceId == deviceId).ToListAsync();
+            return _context.Operations
+                .Where(o => o.DeviceId == deviceId)
+                .ToListAsync();
         }
-
-
     }
-
 }
