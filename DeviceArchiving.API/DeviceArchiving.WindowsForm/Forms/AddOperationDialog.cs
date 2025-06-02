@@ -38,7 +38,7 @@ namespace DeviceArchiving.WindowsForm.Forms
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
 
-            Label lblOperationType = new Label { Text = "نوع العملية:", Location = new Point(50, 30), AutoSize = true };
+            Label lblOperationType = new Label { Text = "نوع العملية", Location = new Point(50, 30), AutoSize = true };
             ComboBox cmbOperationType = new ComboBox
             {
                 Location = new Point(150, 30),
@@ -47,13 +47,13 @@ namespace DeviceArchiving.WindowsForm.Forms
                 Name = "cmbOperationType"
             };
 
-            Label lblOldValue = new Label { Text = "القيمة القديمة:", Location = new Point(50, 70), AutoSize = true };
+            Label lblOldValue = new Label { Text = "القيمة القديمة", Location = new Point(50, 70), AutoSize = true };
             TextBox txtOldValue = new TextBox { Location = new Point(150, 70), Width = 200, Name = "txtOldValue" };
 
-            Label lblNewValue = new Label { Text = "القيمة الجديدة:", Location = new Point(50, 110), AutoSize = true };
+            Label lblNewValue = new Label { Text = "القيمة الجديدة", Location = new Point(50, 110), AutoSize = true };
             TextBox txtNewValue = new TextBox { Location = new Point(150, 110), Width = 200, Name = "txtNewValue" };
 
-            Label lblComment = new Label { Text = "التعليق:", Location = new Point(50, 150), AutoSize = true };
+            Label lblComment = new Label { Text = "التعليق", Location = new Point(50, 150), AutoSize = true };
             TextBox txtComment = new TextBox
             {
                 Location = new Point(150, 150),

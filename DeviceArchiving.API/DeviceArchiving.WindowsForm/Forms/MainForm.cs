@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using ClosedXML.Excel;
 using DeviceArchiving.WindowsForm.Dtos;
+
 namespace DeviceArchiving.WindowsForm.Forms
 {
     public partial class MainForm : Form
@@ -28,17 +29,22 @@ namespace DeviceArchiving.WindowsForm.Forms
         private string _serialNumberFilter = "";
         private string _typeFilter = "";
         private List<ExcelDevice> _excelData = new List<ExcelDevice>();
-        private bool _loading = false;
+        private bool _isLoading = false;
 
         public MainForm(IAccountService accountService, AuthenticationResponse user)
         {
             _accountService = accountService;
             _user = user;
+           
             _deviceService = Program.Services.GetService<IDeviceService>();
             _operationService = Program.Services.GetService<IOperationService>();
             _operationTypeService = Program.Services.GetService<IOperationTypeService>();
+
             this.RightToLeft = RightToLeft.Yes;
             this.RightToLeftLayout = true;
+
+            InitializeComponent();
+
             SetupUI();
             LoadDevices();
         }
@@ -50,78 +56,149 @@ namespace DeviceArchiving.WindowsForm.Forms
             this.StartPosition = FormStartPosition.CenterScreen;
             this.WindowState = FormWindowState.Maximized;
 
-            // Header
-            Label lblHeader = new Label { Text = $"„—Õ»«° {_user.UserName}", Location = new Point(20, 20), AutoSize = true, Font = new Font("Arial", 14, FontStyle.Bold) };
+            // ≈÷«›… Ã„Ì⁄ «·⁄‰«’— ≈·Ï «·›Ê—„
+            Controls.Add(CreateHeaderLabel());
+            Controls.Add(CreateSearchPanel());
+            Controls.Add(CreateButtonsPanel());
+            Controls.Add(CreateDevicesDataGridView());
+        }
 
-            // Search Panel
-            Panel searchPanel = new Panel { Location = new Point(20, 60), Size = new Size(this.ClientSize.Width - 40, 100), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            Label lblGlobalSearch = new Label { Text = "«·»ÕÀ «·⁄«„:", Location = new Point(20, 20), AutoSize = true };
-            TextBox txtGlobalSearch = new TextBox { Location = new Point(100, 20), Width = 400, Name = "txtGlobalSearch" };
-            Label lblLaptopName = new Label { Text = "«”„ «··«»  Ê»:", Location = new Point(20, 50), AutoSize = true };
-            TextBox txtLaptopName = new TextBox { Location = new Point(100, 50), Width = 200, Name = "txtLaptopName" };
-            Label lblSerialNumber = new Label { Text = "«·—ﬁ„ «· ”·”·Ì:", Location = new Point(320, 50), AutoSize = true };
-            TextBox txtSerialNumber = new TextBox { Location = new Point(400, 50), Width = 200, Name = "txtSerialNumber" };
-            Label lblType = new Label { Text = "«·‰Ê⁄:", Location = new Point(620, 50), AutoSize = true };
-            ComboBox cmbType = new ComboBox { Location = new Point(660, 50), Width = 200, DropDownStyle = ComboBoxStyle.DropDownList, Name = "cmbType" };
-            Button btnClear = new Button { Text = "„”Õ", Location = new Point(860, 50), Width = 80 };
-            txtGlobalSearch.TextChanged += (s, e) => { _globalSearchQuery = txtGlobalSearch.Text; ApplyFilter(); };
-            txtLaptopName.TextChanged += (s, e) => { _laptopNameFilter = txtLaptopName.Text; ApplyFilter(); };
-            txtSerialNumber.TextChanged += (s, e) => { _serialNumberFilter = txtSerialNumber.Text; ApplyFilter(); };
-            cmbType.SelectedIndexChanged += (s, e) => { _typeFilter = cmbType.SelectedItem?.ToString() ?? ""; ApplyFilter(); };
-            btnClear.Click += BtnClear_Click;
-            searchPanel.Controls.AddRange(new Control[] { lblGlobalSearch, txtGlobalSearch, lblLaptopName, txtLaptopName, lblSerialNumber, txtSerialNumber, lblType, cmbType, btnClear });
+        private Label CreateHeaderLabel()
+        {
+            return new Label
+            {
+                Text = $"„—Õ»«° {_user.UserName}",
+                Location = new Point(20, 20),
+                AutoSize = true,
+                Font = new Font("Arial", 14, FontStyle.Bold)
+            };
+        }
 
-            // Buttons Panel
-            Panel buttonsPanel = new Panel { Location = new Point(20, 170), Size = new Size(this.ClientSize.Width - 40, 50), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            //  ⁄œÌ· „Ê«ﬁ⁄ «·√“—«— ·  ”⁄ œ«Œ· «··ÊÕ…
-            Button btnAddDevice = new Button { Text = "≈÷«›… ÃÂ«“", Location = new Point(20, 10), Width = 100 };
-            Button btnEditDevice = new Button { Text = " ⁄œÌ· ÃÂ«“", Location = new Point(130, 10), Width = 100 };
-            Button btnDeleteDevice = new Button { Text = "Õ–› ÃÂ«“", Location = new Point(240, 10), Width = 100 };
-            Button btnExportExcel = new Button { Text = " ’œÌ—", Location = new Point(350, 10), Width = 100 };
-            Button btnImportExcel = new Button { Text = "«Œ — „·› Excel", Location = new Point(460, 10), Width = 100 };
-            Button btnAddOperation = new Button { Text = "≈÷«›… ⁄„·Ì…", Location = new Point(570, 10), Width = 100 };
-            Button btnShowOperations = new Button { Text = "⁄—÷ «·⁄„·Ì« ", Location = new Point(680, 10), Width = 100 };
-            Button btnRefresh = new Button { Text = " ÕœÌÀ", Location = new Point(790, 10), Width = 100 };
-            Button btnShowOperationTypes = new Button { Text = "⁄—÷ √‰Ê«⁄ «·⁄„·Ì« ", Location = new Point(900, 10), Width = 100 };
+        private Panel CreateSearchPanel()
+        {
+            var panel = new Panel
+            {
+                Location = new Point(20, 60),
+                Size = new Size(ClientSize.Width - 40, 100),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
 
-            btnAddDevice.Click += BtnAddDevice_Click;
-            btnEditDevice.Click += BtnEditDevice_Click;
-            btnDeleteDevice.Click += BtnDeleteDevice_Click;
-            btnExportExcel.Click += BtnExportExcel_Click;
-            btnImportExcel.Click += BtnImportExcel_Click;
-            btnAddOperation.Click += BtnAddOperation_Click;
-            btnShowOperations.Click += BtnShowOperations_Click;
-            btnRefresh.Click += BtnRefresh_Click;
-            btnShowOperationTypes.Click += BtnShowOperationTypes_Click;
-            buttonsPanel.Controls.AddRange(new Control[] { btnAddDevice, btnEditDevice, btnDeleteDevice, btnExportExcel, btnImportExcel, btnAddOperation, btnShowOperations, btnRefresh , btnShowOperationTypes });
+            var lblGlobalSearch = new Label { Text = "«·»ÕÀ «·⁄«„", Location = new Point(20, 20), AutoSize = true };
+            var txtGlobalSearch = new TextBox { Location = new Point(100, 20), Width = 400, Name = "txtGlobalSearch" };
+            txtGlobalSearch.TextChanged += (s, e) =>
+            {
+                _globalSearchQuery = txtGlobalSearch.Text;
+                ApplyFilters();
+            };
 
-            // Devices Table
-            DataGridView dataGridViewDevices = new DataGridView
+            var lblLaptopName = new Label { Text = "«”„ «··«»  Ê»", Location = new Point(20, 50), AutoSize = true };
+            var txtLaptopName = new TextBox { Location = new Point(100, 50), Width = 200, Name = "txtLaptopName" };
+            txtLaptopName.TextChanged += (s, e) =>
+            {
+                _laptopNameFilter = txtLaptopName.Text;
+                ApplyFilters();
+            };
+
+            var lblSerialNumber = new Label { Text = "«·—ﬁ„ «· ”·”·Ì", Location = new Point(320, 50), AutoSize = true };
+            var txtSerialNumber = new TextBox { Location = new Point(400, 50), Width = 200, Name = "txtSerialNumber" };
+            txtSerialNumber.TextChanged += (s, e) =>
+            {
+                _serialNumberFilter = txtSerialNumber.Text;
+                ApplyFilters();
+            };
+
+            var lblType = new Label { Text = "«·‰Ê⁄", Location = new Point(620, 50), AutoSize = true };
+            var cmbType = new ComboBox
+            {
+                Location = new Point(660, 50),
+                Width = 200,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Name = "cmbType"
+            };
+            cmbType.SelectedIndexChanged += (s, e) =>
+            {
+                _typeFilter = cmbType.SelectedItem?.ToString() ?? "";
+                ApplyFilters();
+            };
+
+            var btnClear = new Button { Text = "„”Õ", Location = new Point(860, 50), Width = 80 };
+            btnClear.Click += BtnClearFilters_Click;
+
+            panel.Controls.AddRange(new Control[]
+            {
+                lblGlobalSearch, txtGlobalSearch,
+                lblLaptopName, txtLaptopName,
+                lblSerialNumber, txtSerialNumber,
+                lblType, cmbType,
+                btnClear
+            });
+
+            return panel;
+        }
+
+        private Panel CreateButtonsPanel()
+        {
+            var panel = new Panel
+            {
+                Location = new Point(20, 170),
+                Size = new Size(ClientSize.Width - 40, 50),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+
+            // ≈‰‘«¡ «·√“—«— „⁄  ÕœÌœ «·„Ê«ﬁ⁄
+            var buttons = new (string Text, Point Location, EventHandler Handler)[]
+            {
+                ("≈÷«›… ÃÂ«“", new Point(20, 10), BtnAddDevice_Click),
+                (" ⁄œÌ· ÃÂ«“", new Point(130, 10), BtnEditDevice_Click),
+                ("Õ–› ÃÂ«“", new Point(240, 10), BtnDeleteDevice_Click),
+                (" ’œÌ—", new Point(350, 10), BtnExportExcel_Click),
+                ("«Œ — „·› Excel", new Point(460, 10), BtnImportExcel_Click),
+                ("≈÷«›… ⁄„·Ì…", new Point(570, 10), BtnAddOperation_Click),
+                ("⁄—÷ «·⁄„·Ì« ", new Point(680, 10), BtnShowOperations_Click),
+                (" ÕœÌÀ", new Point(790, 10), BtnRefresh_Click),
+                ("⁄—÷ √‰Ê«⁄ «·⁄„·Ì« ", new Point(900, 10), BtnShowOperationTypes_Click)
+            };
+
+            foreach (var (text, location, handler) in buttons)
+            {
+                var btn = new Button { Text = text, Location = location, Width = 100 };
+                btn.Click += handler;
+                panel.Controls.Add(btn);
+            }
+
+            return panel;
+        }
+
+        private DataGridView CreateDevicesDataGridView()
+        {
+            var dgv = new DataGridView
             {
                 Location = new Point(20, 230),
-                Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 300),
+                Size = new Size(ClientSize.Width - 40, ClientSize.Height - 300),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
                 Name = "dataGridViewDevices",
-                RightToLeft = RightToLeft.Yes
+                RightToLeft = RightToLeft.Yes,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                MultiSelect = false,
+                RowHeadersVisible = false,
             };
-            dataGridViewDevices.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridViewDevices.MultiSelect = false;
-            dataGridViewDevices.RowHeadersVisible = false;
-            dataGridViewDevices.SelectionChanged += DataGridViewDevices_SelectionChanged;
-            dataGridViewDevices.DoubleClick += (s, e) => BtnShowOperations_Click(s, e);
 
-            this.Controls.AddRange(new Control[] { lblHeader, searchPanel, buttonsPanel, dataGridViewDevices });
+            dgv.SelectionChanged += DataGridViewDevices_SelectionChanged;
+            dgv.DoubleClick += (s, e) => BtnShowOperations_Click(s, e);
+
+            return dgv;
         }
 
         private async void LoadDevices()
         {
             try
             {
-                _loading = true;
+                _isLoading = true;
                 _devices = (await _deviceService.GetAllDevicesAsync()).ToList();
                 _filteredDevices = _devices.ToList();
-                UpdateDataGridView();
-                UpdateDeviceTypes();
+
+                UpdateDeviceTypesComboBox();
+                UpdateDevicesGrid();
             }
             catch (Exception ex)
             {
@@ -129,88 +206,107 @@ namespace DeviceArchiving.WindowsForm.Forms
             }
             finally
             {
-                _loading = false;
+                _isLoading = false;
             }
         }
-
-        private void BtnShowOperationTypes_Click(object sender, EventArgs e)
+   
+        private void UpdateDevicesGrid()
         {
-            using (var form = new OperationTypeListForm(_operationTypeService))
+            var dgv = Controls.Find("dataGridViewDevices", true).FirstOrDefault() as DataGridView;
+            if (dgv == null) return;
+
+            dgv.DataSource = null;
+            dgv.DataSource = _filteredDevices;
+
+            // ≈⁄«œ…  ”„Ì… «·√⁄„œ… · ﬂÊ‰ ⁄—»Ì… ÊÊ«÷Õ…
+            var columnsRename = new Dictionary<string, string>
             {
-                form.ShowDialog();
+                {"Source", "«·ÃÂ…"},
+                {"BrotherName", "«”„ «·√Œ"},
+                {"LaptopName", "«”„ «··«»  Ê»"},
+                {"SystemPassword", "ﬂ·„… „—Ê— «·‰Ÿ«„"},
+                {"WindowsPassword", "ﬂ·„… „—Ê— ÊÌ‰œÊ“"},
+                {"HardDrivePassword", "ﬂ·„… «· ‘›Ì—"},
+                {"FreezePassword", "ﬂ·„… «· Ã„Ìœ"},
+                {"Code", "«·ﬂÊœ"},
+                {"Type", "«·‰Ê⁄"},
+                {"SerialNumber", "«·—ﬁ„ «· ”·”·Ì"},
+                {"Card", "«·ﬂ— "},
+                {"Comment", "„·«ÕŸ« "},
+                {"ContactNumber", "—ﬁ„ «· Ê«’·"},
+                {"UserName", " „ »Ê«”ÿ…"},
+                {"CreatedAt", " «—ÌŒ «·≈‰‘«¡"}
+            };
+
+            foreach (var col in columnsRename)
+            {
+                if (dgv.Columns[col.Key] != null)
+                    dgv.Columns[col.Key].HeaderText = col.Value;
             }
         }
-        private void BtnRefresh_Click(object sender, EventArgs e)
-        {
-            LoadDevices();
-        }
 
-        private void UpdateDataGridView()
+        private void UpdateDeviceTypesComboBox()
         {
-            var dataGridView = this.Controls["dataGridViewDevices"] as DataGridView;
-            dataGridView.DataSource = null;
-            dataGridView.DataSource = _filteredDevices;
-            if (dataGridView.Columns["Source"] != null) dataGridView.Columns["Source"].HeaderText = "«·ÃÂ…";
-            if (dataGridView.Columns["BrotherName"] != null) dataGridView.Columns["BrotherName"].HeaderText = "«”„ «·√Œ";
-            if (dataGridView.Columns["LaptopName"] != null) dataGridView.Columns["LaptopName"].HeaderText = "«”„ «··«»  Ê»";
-            if (dataGridView.Columns["SystemPassword"] != null) dataGridView.Columns["SystemPassword"].HeaderText = "ﬂ·„… „—Ê— «·‰Ÿ«„";
-            if (dataGridView.Columns["WindowsPassword"] != null) dataGridView.Columns["WindowsPassword"].HeaderText = "ﬂ·„… „—Ê— ÊÌ‰œÊ“";
-            if (dataGridView.Columns["HardDrivePassword"] != null) dataGridView.Columns["HardDrivePassword"].HeaderText = "ﬂ·„… «· ‘›Ì—";
-            if (dataGridView.Columns["FreezePassword"] != null) dataGridView.Columns["FreezePassword"].HeaderText = "ﬂ·„… «· Ã„Ìœ";
-            if (dataGridView.Columns["Code"] != null) dataGridView.Columns["Code"].HeaderText = "«·ﬂÊœ";
-            if (dataGridView.Columns["Type"] != null) dataGridView.Columns["Type"].HeaderText = "«·‰Ê⁄";
-            if (dataGridView.Columns["SerialNumber"] != null) dataGridView.Columns["SerialNumber"].HeaderText = "«·—ﬁ„ «· ”·”·Ì";
-            if (dataGridView.Columns["Card"] != null) dataGridView.Columns["Card"].HeaderText = "«·ﬂ— ";
-            if (dataGridView.Columns["Comment"] != null) dataGridView.Columns["Comment"].HeaderText = "„·«ÕŸ« ";
-            if (dataGridView.Columns["ContactNumber"] != null) dataGridView.Columns["ContactNumber"].HeaderText = "—ﬁ„ «· Ê«’·";
-            if (dataGridView.Columns["UserName"] != null) dataGridView.Columns["UserName"].HeaderText = " „ »Ê«”ÿ…";
-            if (dataGridView.Columns["CreatedAt"] != null) dataGridView.Columns["CreatedAt"].HeaderText = " «—ÌŒ «·≈‰‘«¡";
-        }
+            var cmbType = Controls.OfType<Panel>()
+                .SelectMany(p => p.Controls.OfType<ComboBox>())
+                .FirstOrDefault(cmb => cmb.Name == "cmbType");
 
-        private void UpdateDeviceTypes()
-        {
-            var cmbType = this.Controls.OfType<Panel>().First(p => p.Controls.ContainsKey("cmbType")).Controls["cmbType"] as ComboBox;
-            var types = _devices.Select(d => d.Type).Distinct().ToList();
+            if (cmbType == null) return;
+
+            var types = _devices.Select(d => d.Type).Distinct().OrderBy(t => t).ToList();
             cmbType.Items.Clear();
-            cmbType.Items.Add("");
+            cmbType.Items.Add(""); // «·ŒÌ«— «·«› —«÷Ì «·›«—€
             cmbType.Items.AddRange(types.ToArray());
             cmbType.SelectedIndex = 0;
         }
 
-        private void ApplyFilter()
+        private void ApplyFilters()
         {
+            if (_isLoading) return;
+
             _filteredDevices = _devices.Where(d =>
-                (string.IsNullOrEmpty(_globalSearchQuery) ||
-                 d.Source?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.BrotherName?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.LaptopName?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.SerialNumber?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.Type?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.SystemPassword?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.WindowsPassword?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.HardDrivePassword?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.FreezePassword?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.Code?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.Card?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.Comment?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.ContactNumber?.ToLower().Contains(_globalSearchQuery.ToLower()) == true ||
-                 d.UserName?.ToLower().Contains(_globalSearchQuery.ToLower()) == true) &&
-                (string.IsNullOrEmpty(_laptopNameFilter) || d.LaptopName?.ToLower().Contains(_laptopNameFilter.ToLower()) == true) &&
-                (string.IsNullOrEmpty(_serialNumberFilter) || d.SerialNumber?.ToLower().Contains(_serialNumberFilter.ToLower()) == true) &&
+                (string.IsNullOrEmpty(_globalSearchQuery) || ContainsAny(d, _globalSearchQuery)) &&
+                (string.IsNullOrEmpty(_laptopNameFilter) || d.LaptopName?.Contains(_laptopNameFilter, StringComparison.OrdinalIgnoreCase) == true) &&
+                (string.IsNullOrEmpty(_serialNumberFilter) || d.SerialNumber?.Contains(_serialNumberFilter, StringComparison.OrdinalIgnoreCase) == true) &&
                 (string.IsNullOrEmpty(_typeFilter) || d.Type == _typeFilter)
             ).ToList();
-            UpdateDataGridView();
+
+            UpdateDevicesGrid();
         }
 
-        private void BtnClear_Click(object sender, EventArgs e)
+        private bool ContainsAny(GetAllDevicesDto device, string search)
         {
-            _globalSearchQuery = _laptopNameFilter = _serialNumberFilter = _typeFilter = "";
+            search = search.ToLower();
+
+            return
+                (device.Source?.ToLower().Contains(search) == true) ||
+                (device.BrotherName?.ToLower().Contains(search) == true) ||
+                (device.LaptopName?.ToLower().Contains(search) == true) ||
+                (device.SystemPassword?.ToLower().Contains(search) == true) ||
+                (device.WindowsPassword?.ToLower().Contains(search) == true) ||
+                (device.HardDrivePassword?.ToLower().Contains(search) == true) ||
+                (device.FreezePassword?.ToLower().Contains(search) == true) ||
+                (device.Code?.ToLower().Contains(search) == true) ||
+                (device.Type?.ToLower().Contains(search) == true) ||
+                (device.SerialNumber?.ToLower().Contains(search) == true) ||
+                (device.Card?.ToLower().Contains(search) == true) ||
+                (device.Comment?.ToLower().Contains(search) == true) ||
+                (device.ContactNumber?.ToLower().Contains(search) == true) ||
+                (device.UserName?.ToLower().Contains(search) == true);
+        }
+
+
+        private void BtnClearFilters_Click(object sender, EventArgs e)
+        {
+            _globalSearchQuery = "";
+            _laptopNameFilter = "";
+            _serialNumberFilter = "";
             var searchPanel = this.Controls.OfType<Panel>().First(p => p.Controls.ContainsKey("txtGlobalSearch"));
             (searchPanel.Controls["txtGlobalSearch"] as TextBox).Text = "";
             (searchPanel.Controls["txtLaptopName"] as TextBox).Text = "";
             (searchPanel.Controls["txtSerialNumber"] as TextBox).Text = "";
             (searchPanel.Controls["cmbType"] as ComboBox).SelectedIndex = 0;
-            ApplyFilter();
+            ApplyFilters();
         }
 
         private void BtnAddDevice_Click(object sender, EventArgs e)
@@ -221,7 +317,18 @@ namespace DeviceArchiving.WindowsForm.Forms
                 LoadDevices();
             }
         }
+        private void BtnRefresh_Click(object sender, EventArgs e)
+        {
+            LoadDevices();
+        }
 
+        private void BtnShowOperationTypes_Click(object sender, EventArgs e)
+        {
+            using (var form = new OperationTypeListForm(_operationTypeService))
+            {
+                form.ShowDialog();
+            }
+        }
         private void BtnEditDevice_Click(object sender, EventArgs e)
         {
             if (_selectedDevice == null)
@@ -319,7 +426,7 @@ namespace DeviceArchiving.WindowsForm.Forms
                 {
                     try
                     {
-                        _loading = true;
+                        _isLoading = true;
                         _excelData = ReadExcelFile(openFileDialog.FileName);
                         if (_excelData.Count == 0) return;
 
@@ -337,7 +444,7 @@ namespace DeviceArchiving.WindowsForm.Forms
                     }
                     finally
                     {
-                        _loading = false;
+                        _isLoading = false;
                     }
                 }
             }
@@ -515,7 +622,7 @@ namespace DeviceArchiving.WindowsForm.Forms
 
             try
             {
-                _loading = true;
+                _isLoading = true;
                 var uploadDtos = selectedDevices.Select(d => new DeviceUploadDto
                 {
                     Source = d.Source,
@@ -545,7 +652,7 @@ namespace DeviceArchiving.WindowsForm.Forms
             }
             finally
             {
-                _loading = false;
+                _isLoading = false;
             }
         }
 
@@ -565,7 +672,7 @@ namespace DeviceArchiving.WindowsForm.Forms
                 MessageBox.Show("Ì—ÃÏ  ÕœÌœ ÃÂ«“ ·≈÷«›… ⁄„·Ì….", " Õ–Ì—", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            AddOperationDialog addOperationDialog = new AddOperationDialog(_operationTypeService,_operationService , _selectedDevice.Id, _selectedDevice.LaptopName);
+            AddOperationDialog addOperationDialog = new AddOperationDialog(_operationTypeService, _operationService, _selectedDevice.Id, _selectedDevice.LaptopName);
             if (addOperationDialog.ShowDialog() == DialogResult.OK)
             {
                 MessageBox.Show(" „ ≈÷«›… «·⁄„·Ì… »‰Ã«Õ.", "‰Ã«Õ", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -593,8 +700,4 @@ namespace DeviceArchiving.WindowsForm.Forms
             }
         }
     }
-
-
-
 }
-

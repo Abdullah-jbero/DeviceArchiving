@@ -1,82 +1,154 @@
 ﻿using DeviceArchiving.Data.Dto.Users;
 using DeviceArchiving.Service;
+using Guna.UI2.WinForms;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DeviceArchiving.WindowsForm.Forms;
-public partial class LoginForm : Form
+namespace DeviceArchiving.WindowsForm.Forms
 {
-    private readonly IAccountService _accountService;
-    public AuthenticationResponse AuthResponse { get; private set; }
-    public int LoggedInUserId => AuthResponse?.Id ?? 0;
-
-    public LoginForm(IAccountService accountService)
+    public partial class LoginForm : Form
     {
-        _accountService = accountService;
-        SetupUI();
-        this.RightToLeft = RightToLeft.Yes;
-        this.RightToLeftLayout = true;
-    }
+        private readonly IAccountService _accountService;
 
-    private void SetupUI()
-    {
-        this.Text = "تسجيل الدخول";
-        this.Size = new Size(400, 300);
-        this.StartPosition = FormStartPosition.CenterScreen;
+        private Guna2TextBox txtUsername;
+        private Guna2TextBox txtPassword;
+        private Guna2Button btnLogin;
+        private Guna2Button btnSignup;
 
-        Label lblUsername = new Label { Text = "اسم المستخدم:", Location = new Point(50, 50), AutoSize = true };
-        TextBox txtUsername = new TextBox { Location = new Point(150, 50), Width = 200, Name = "txtUsername" };
-        Label lblPassword = new Label { Text = "كلمة المرور:", Location = new Point(50, 100), AutoSize = true };
-        TextBox txtPassword = new TextBox { Location = new Point(150, 100), Width = 200, UseSystemPasswordChar = true, Name = "txtPassword" };
-        Button btnLogin = new Button { Text = "تسجيل الدخول", Location = new Point(150, 150), Width = 100 };
-        Button btnSignup = new Button { Text = "إنشاء حساب", Location = new Point(260, 150), Width = 100 };
+        public AuthenticationResponse AuthResponse { get; private set; }
+        public int LoggedInUserId => AuthResponse?.Id ?? 0;
 
-        btnLogin.Click += BtnLogin_Click;
-        btnSignup.Click += BtnSignup_Click;
-
-        this.Controls.AddRange(new Control[] { lblUsername, txtUsername, lblPassword, txtPassword, btnLogin, btnSignup });
-    }
-
-    private async void BtnLogin_Click(object sender, EventArgs e)
-    {
-        TextBox txtUsername = this.Controls["txtUsername"] as TextBox;
-        TextBox txtPassword = this.Controls["txtPassword"] as TextBox;
-
-        try
+        public LoginForm(IAccountService accountService)
         {
-            var request = new AuthenticationRequest { UserName = txtUsername.Text, Password = txtPassword.Text };
-            var response = await _accountService.AuthenticateAsync(request);
-            if (response.Success)
+            _accountService = accountService;
+
+            this.RightToLeft = RightToLeft.Yes;
+            this.RightToLeftLayout = true;
+
+            SetupUI();
+        }
+
+        private void SetupUI()
+        {
+            this.Text = "تسجيل الدخول";
+            this.Size = new Size(420, 280);
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.BackColor = Color.White;
+
+            Label lblUsername = new Label
             {
-                AppSession.CurrentUserId = response.Data.Id;
-                MainForm mainForm = new MainForm(_accountService, response.Data);
-                mainForm.Show();
-                this.Hide();
+                Text = "اسم المستخدم",
+                Location = new Point(40, 50),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10)
+            };
+
+            txtUsername = new Guna2TextBox
+            {
+                Location = new Point(150, 45),
+                Width = 200,
+                PlaceholderText = "أدخل اسم المستخدم",
+                BorderRadius = 6,
+                Font = new Font("Segoe UI", 10)
+            };
+
+            Label lblPassword = new Label
+            {
+                Text = "كلمة المرور",
+                Location = new Point(40, 100),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10)
+            };
+
+            txtPassword = new Guna2TextBox
+            {
+                Location = new Point(150, 95),
+                Width = 200,
+                PlaceholderText = "أدخل كلمة المرور",
+                BorderRadius = 6,
+                Font = new Font("Segoe UI", 10),
+                UseSystemPasswordChar = true
+            };
+
+            btnLogin = new Guna2Button
+            {
+                Text = "تسجيل الدخول",
+                Location = new Point(150, 150),
+                Width = 100,
+                Height = 40,
+                FillColor = Color.FromArgb(45, 204, 112),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                BorderRadius = 8,
+                ForeColor = Color.White
+            };
+            btnLogin.Click += BtnLogin_Click;
+
+            btnSignup = new Guna2Button
+            {
+                Text = "إنشاء حساب",
+                Location = new Point(260, 150),
+                Width = 100,
+                Height = 40,
+                FillColor = Color.Gray,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                BorderRadius = 8,
+                ForeColor = Color.White
+            };
+            btnSignup.Click += BtnSignup_Click;
+
+            this.AcceptButton = btnLogin;
+            this.CancelButton = btnSignup;
+
+            this.Controls.AddRange(new Control[]
+            {
+                lblUsername, txtUsername,
+                lblPassword, txtPassword,
+                btnLogin, btnSignup
+            });
+
+            this.Load += (s, e) => txtUsername.Focus();
+        }
+
+        private async void BtnLogin_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var request = new AuthenticationRequest
+                {
+                    UserName = txtUsername.Text.Trim(),
+                    Password = txtPassword.Text.Trim()
+                };
+
+                var response = await _accountService.AuthenticateAsync(request);
+
+                if (response.Success)
+                {
+                    AppSession.CurrentUserId = response.Data.Id;
+                    MainForm mainForm = new MainForm(_accountService, response.Data);
+                    mainForm.Show();
+                    this.Hide();
+                }
+                else
+                {
+                    MessageBox.Show(response.Message, "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show(response.Message, "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"حدث خطأ أثناء تسجيل الدخول: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"حدث خطأ: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-    }
 
-    private void BtnSignup_Click(object sender, EventArgs e)
-    {
-        SignupForm signupForm = new SignupForm(_accountService);
-        if (signupForm.ShowDialog() == DialogResult.OK)
+        private void BtnSignup_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("تم إنشاء الحساب بنجاح، يرجى تسجيل الدخول.", "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            SignupForm signupForm = new SignupForm(_accountService);
+            if (signupForm.ShowDialog() == DialogResult.OK)
+            {
+                MessageBox.Show("تم إنشاء الحساب بنجاح، يرجى تسجيل الدخول.", "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
     }
 }

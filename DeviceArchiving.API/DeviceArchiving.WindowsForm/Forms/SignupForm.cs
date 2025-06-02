@@ -30,9 +30,9 @@ public partial class SignupForm : Form
         this.Size = new Size(400, 300);
         this.StartPosition = FormStartPosition.CenterScreen;
 
-        Label lblUsername = new Label { Text = "اسم المستخدم:", Location = new Point(50, 50), AutoSize = true };
+        Label lblUsername = new Label { Text = "اسم المستخدم", Location = new Point(50, 50), AutoSize = true };
         TextBox txtUsername = new TextBox { Location = new Point(150, 50), Width = 200, Name = "txtUsername" };
-        Label lblPassword = new Label { Text = "كلمة المرور:", Location = new Point(50, 100), AutoSize = true };
+        Label lblPassword = new Label { Text = "كلمة المرور", Location = new Point(50, 100), AutoSize = true };
         TextBox txtPassword = new TextBox { Location = new Point(150, 100), Width = 200, UseSystemPasswordChar = true, Name = "txtPassword" };
         Button btnSave = new Button { Text = "إنشاء", Location = new Point(150, 150), Width = 100 };
 

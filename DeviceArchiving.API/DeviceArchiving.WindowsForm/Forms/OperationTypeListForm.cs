@@ -1,5 +1,6 @@
 ﻿using DeviceArchiving.Data.Entities;
 using DeviceArchiving.Service;
+using Guna.UI2.WinForms;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -13,7 +14,12 @@ namespace DeviceArchiving.WindowsForm.Forms
         private readonly IOperationTypeService _operationTypeService;
         private List<OperationType> _operationTypes = new List<OperationType>();
         private string _searchTerm = "";
-        private DataGridView dataGridViewOperationTypes; // Declare as a class-level field
+
+        private Guna2DataGridView dataGridViewOperationTypes;
+        private Guna2TextBox txtSearch;
+        private Guna2Button btnClear;
+        private Guna2Button btnAddOperationType;
+        private ToolTip toolTip;
 
         public OperationTypeListForm(IOperationTypeService operationTypeService)
         {
@@ -30,56 +36,151 @@ namespace DeviceArchiving.WindowsForm.Forms
             this.Size = new Size(800, 600);
             this.StartPosition = FormStartPosition.CenterScreen;
 
-            // Header
-            Label lblHeader = new Label { Text = "قائمة أنواع العمليات", Location = new Point(20, 20), AutoSize = true, Font = new Font("Arial", 14, FontStyle.Bold) };
+            // ToolTip
+            toolTip = new ToolTip();
 
-            // Search Panel
-            Panel searchPanel = new Panel { Location = new Point(20, 60), Size = new Size(this.ClientSize.Width - 40, 50), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            Label lblSearch = new Label { Text = "البحث في أنواع العمليات:", Location = new Point(20, 15), AutoSize = true };
-            TextBox txtSearch = new TextBox { Location = new Point(150, 15), Width = 300, Name = "txtSearch" };
-            Button btnClear = new Button { Text = "مسح", Location = new Point(460, 15), Width = 80 };
-            txtSearch.TextChanged += (s, e) => { _searchTerm = txtSearch.Text; LoadOperationTypes(); };
-            btnClear.Click += (s, e) => { txtSearch.Text = ""; _searchTerm = ""; LoadOperationTypes(); };
-            searchPanel.Controls.AddRange(new Control[] { lblSearch, txtSearch, btnClear });
-
-            // Buttons Panel
-            Panel buttonsPanel = new Panel { Location = new Point(20, 120), Size = new Size(this.ClientSize.Width - 40, 50), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            Button btnAddOperationType = new Button { Text = "إضافة نوع عملية", Location = new Point(this.ClientSize.Width - 180, 10), Width = 120, Anchor = AnchorStyles.Top | AnchorStyles.Right };
-            btnAddOperationType.Click += BtnAddOperationType_Click;
-            buttonsPanel.Controls.Add(btnAddOperationType);
-
-            // DataGridView لعرض الأنواع
-            dataGridViewOperationTypes = new DataGridView // Assign to the class-level field
+            // Header Label
+            var lblHeader = new Guna2HtmlLabel
             {
-                Location = new Point(20, 180),
-                Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 250),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
-                Name = "dataGridViewOperationTypes",
+                Text = "قائمة أنواع العمليات",
+                Location = new Point(20, 20),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(45, 52, 54)
+            };
+
+            // Search Label
+            var lblSearch = new Guna2HtmlLabel
+            {
+                Text = "البحث في أنواع العمليات",
+                Location = new Point(20, 70),
+                AutoSize = true,
+                ForeColor = Color.FromArgb(45, 52, 54),
+                Font = new Font("Segoe UI", 10, FontStyle.Regular)
+            };
+
+            // Search TextBox
+            txtSearch = new Guna2TextBox
+            {
+                Location = new Point(170, 65),
+                Width = 300,
+                PlaceholderText = "ابحث هنا...",
+                RightToLeft = RightToLeft.Yes,
+                Font = new Font("Segoe UI", 10)
+            };
+            txtSearch.TextChanged += (s, e) =>
+            {
+                _searchTerm = txtSearch.Text;
+                LoadOperationTypes();
+            };
+            toolTip.SetToolTip(txtSearch, "ابحث في أنواع العمليات");
+
+            // Clear Button
+            btnClear = new Guna2Button
+            {
+                Text = "مسح",
+                Location = new Point(480, 63),
+                Size = new Size(80, 30),
+                FillColor = Color.FromArgb(214, 48, 49),
+                ForeColor = Color.White,
+                BorderRadius = 5,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold)
+            };
+            btnClear.Click += (s, e) =>
+            {
+                txtSearch.Text = "";
+                _searchTerm = "";
+                LoadOperationTypes();
+            };
+            toolTip.SetToolTip(btnClear, "مسح مربع البحث");
+
+            // Add OperationType Button
+            btnAddOperationType = new Guna2Button
+            {
+                Text = "إضافة نوع عملية",
+                Size = new Size(140, 35),
+                Location = new Point(this.ClientSize.Width - 200, 110), // مع حشو 20px
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                FillColor = Color.FromArgb(34, 177, 76), // أخضر هادئ
+                ForeColor = Color.White,
+                BorderRadius = 5,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            btnAddOperationType.Click += BtnAddOperationType_Click;
+            toolTip.SetToolTip(btnAddOperationType, "إضافة نوع عملية جديد");
+
+            // Guna2DataGridView for displaying operation types
+            dataGridViewOperationTypes = new Guna2DataGridView
+            {
+                Location = new Point(20, 160),
+                Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 200),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 RightToLeft = RightToLeft.Yes,
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 MultiSelect = false,
-                RowHeadersVisible = false
+                RowHeadersVisible = false,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                ReadOnly = true,
+                BorderStyle = BorderStyle.FixedSingle,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                ColumnHeadersHeight = 40,
+                Font = new Font("Segoe UI", 10),
             };
-            dataGridViewOperationTypes.Columns.Add("Name", "الاسم");
-            var actionColumn = new DataGridViewButtonColumn
+
+            // Columns
+            dataGridViewOperationTypes.Columns.Clear();
+
+            var colName = new DataGridViewTextBoxColumn
+            {
+                Name = "Name",
+                HeaderText = "الاسم",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+                DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter }
+            };
+            dataGridViewOperationTypes.Columns.Add(colName);
+
+            var editColumn = new DataGridViewButtonColumn
             {
                 Name = "Edit",
-                HeaderText = "الإجراءات - تعديل",
+                HeaderText = "تعديل",
                 Text = "تعديل",
-                UseColumnTextForButtonValue = true
+                UseColumnTextForButtonValue = true,
+                Width = 80,
+                DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter }
             };
-            dataGridViewOperationTypes.Columns.Add(actionColumn);
+            dataGridViewOperationTypes.Columns.Add(editColumn);
+
             var deleteColumn = new DataGridViewButtonColumn
             {
                 Name = "Delete",
-                HeaderText = "الإجراءات - حذف",
+                HeaderText = "حذف",
                 Text = "حذف",
-                UseColumnTextForButtonValue = true
+                UseColumnTextForButtonValue = true,
+                Width = 80,
+                DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter }
             };
             dataGridViewOperationTypes.Columns.Add(deleteColumn);
-            dataGridViewOperationTypes.CellClick += DataGridViewOperationTypes_CellClick;
 
-            this.Controls.AddRange(new Control[] { lblHeader, searchPanel, buttonsPanel, dataGridViewOperationTypes });
+            dataGridViewOperationTypes.CellClick += DataGridViewOperationTypes_CellClick;
+            dataGridViewOperationTypes.CellPainting += DataGridViewOperationTypes_CellPainting;
+
+            // Add controls
+            this.Controls.AddRange(new Control[] {
+                lblHeader,
+                lblSearch,
+                txtSearch,
+                btnClear,
+                btnAddOperationType,
+                dataGridViewOperationTypes
+            });
+
+            // عند تغيير حجم النافذة يتم تحديث حجم الجدول وموقع زر الإضافة
+            this.Resize += (s, e) =>
+            {
+                dataGridViewOperationTypes.Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 200);
+                btnAddOperationType.Location = new Point(this.ClientSize.Width - 200, 110);
+            };
         }
 
         private void LoadOperationTypes()
@@ -98,13 +199,23 @@ namespace DeviceArchiving.WindowsForm.Forms
         private void UpdateDataGridView()
         {
             dataGridViewOperationTypes.Rows.Clear();
-            foreach (var type in _operationTypes)
-            {
-                dataGridViewOperationTypes.Rows.Add(type.Name);
-            }
             if (_operationTypes.Count == 0)
             {
                 dataGridViewOperationTypes.Rows.Add("لا توجد أنواع عمليات متاحة", "", "");
+                var row = dataGridViewOperationTypes.Rows[0];
+                row.DefaultCellStyle.ForeColor = Color.Gray;
+                row.DefaultCellStyle.Font = new Font(dataGridViewOperationTypes.Font, FontStyle.Italic);
+                row.ReadOnly = true;
+
+                // تعطيل أزرار التعديل والحذف لهذا الصف
+                row.Cells["Edit"].ReadOnly = true;
+                row.Cells["Delete"].ReadOnly = true;
+                return;
+            }
+
+            foreach (var type in _operationTypes)
+            {
+                dataGridViewOperationTypes.Rows.Add(type.Name, "تعديل", "حذف");
             }
         }
 
@@ -125,8 +236,7 @@ namespace DeviceArchiving.WindowsForm.Forms
 
             var selectedType = _operationTypes[e.RowIndex];
 
-            // تعديل
-            if (e.ColumnIndex == dataGridViewOperationTypes.Columns["Edit"].Index)
+            if (dataGridViewOperationTypes.Columns[e.ColumnIndex].Name == "Edit")
             {
                 using (var form = new OperationTypeForm(_operationTypeService, selectedType))
                 {
@@ -136,10 +246,10 @@ namespace DeviceArchiving.WindowsForm.Forms
                     }
                 }
             }
-            // حذف
-            else if (e.ColumnIndex == dataGridViewOperationTypes.Columns["Delete"].Index)
+            else if (dataGridViewOperationTypes.Columns[e.ColumnIndex].Name == "Delete")
             {
-                if (MessageBox.Show("هل أنت متأكد من حذف نوع العملية؟", "تأكيد الحذف", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                var confirm = MessageBox.Show("هل أنت متأكد من حذف نوع العملية؟", "تأكيد الحذف", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (confirm == DialogResult.Yes)
                 {
                     try
                     {
@@ -154,5 +264,26 @@ namespace DeviceArchiving.WindowsForm.Forms
                 }
             }
         }
+
+        private void DataGridViewOperationTypes_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            var dgv = sender as DataGridView;
+
+            if (dgv.Columns[e.ColumnIndex].Name == "Edit" && e.RowIndex < _operationTypes.Count)
+            {
+                e.PaintBackground(e.CellBounds, true);
+                TextRenderer.DrawText(e.Graphics, "✏️", e.CellStyle.Font, e.CellBounds, Color.Black, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                e.Handled = true;
+            }
+            else if (dgv.Columns[e.ColumnIndex].Name == "Delete" && e.RowIndex < _operationTypes.Count)
+            {
+                e.PaintBackground(e.CellBounds, true);
+                TextRenderer.DrawText(e.Graphics, "🗑️", e.CellStyle.Font, e.CellBounds, Color.Black, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                e.Handled = true;
+            }
+        }
+
     }
 }
