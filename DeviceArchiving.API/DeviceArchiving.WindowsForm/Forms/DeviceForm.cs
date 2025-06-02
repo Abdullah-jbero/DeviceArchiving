@@ -3,7 +3,6 @@ using DeviceArchiving.Service;
 using Guna.UI2.WinForms;
 using System;
 using System.Drawing;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace DeviceArchiving.WindowsForm.Forms
@@ -25,182 +24,127 @@ namespace DeviceArchiving.WindowsForm.Forms
 
         private void SetupUI()
         {
-            this.Text = "إدارة الأجهزة";
-            this.Size = new Size(1000, 700);
+            this.Text = _device == null ? "إضافة جهاز" : "تعديل جهاز";
+            this.Size = new Size(470, 630);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.WindowState = FormWindowState.Maximized;
-            this.BackColor = Color.WhiteSmoke;
-            this.RightToLeft = RightToLeft.Yes;
-            this.RightToLeftLayout = true;
+            this.BackColor = Color.White;
 
-            // Header
-            var lblHeader = new Guna2HtmlLabel
+            // Helper method to create label
+            Guna2HtmlLabel CreateLabel(string text, Point location)
             {
-                Text = $"مرحبًا، {_user.UserName}",
-                Location = new Point(20, 20),
-                AutoSize = true,
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
-                ForeColor = Color.FromArgb(26, 115, 232)
-            };
+                return new Guna2HtmlLabel
+                {
+                    Text = text,
+                    Location = location,
+                    AutoSize = true,
+                    ForeColor = Color.Black,
+                    BackColor = Color.Transparent,
+                    Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point)
+                };
+            }
 
-            // Search Panel
-            var searchPanel = new Guna2Panel
+            // Helper method to create textbox
+            Guna2TextBox CreateTextBox(string name, Point location)
             {
-                Location = new Point(20, 60),
-                Size = new Size(this.ClientSize.Width - 40, 110),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                BorderColor = Color.LightGray,
-                BorderThickness = 1,
-                FillColor = Color.White,
-                Radius = 10,
-                ShadowDecoration = { Enabled = true, Shadow = new Padding(5) }
-            };
+                return new Guna2TextBox
+                {
+                    Name = name,
+                    Location = location,
+                    Size = new Size(260, 30),
+                    BorderRadius = 5,
+                    PlaceholderText = "",
+                    RightToLeft = RightToLeft.Yes,
+                };
+            }
 
-            var lblGlobalSearch = new Guna2HtmlLabel { Text = "البحث العام", Location = new Point(20, 20), AutoSize = true };
-            var txtGlobalSearch = new Guna2TextBox
-            {
-                Location = new Point(100, 15),
-                Width = 400,
-                Name = "txtGlobalSearch",
-                PlaceholderText = "ابحث هنا...",
-                BorderRadius = 8
-            };
+            // Create controls
+            var lblSource = CreateLabel("المصدر", new Point(50, 30));
+            var txtSource = CreateTextBox("txtSource", new Point(150, 25));
 
-            var lblLaptopName = new Guna2HtmlLabel { Text = "اسم اللاب توب", Location = new Point(20, 55), AutoSize = true };
-            var txtLaptopName = new Guna2TextBox
-            {
-                Location = new Point(100, 50),
-                Width = 200,
-                Name = "txtLaptopName",
-                PlaceholderText = "اسم اللاب توب",
-                BorderRadius = 8
-            };
+            var lblBrotherName = CreateLabel("اسم الأخ", new Point(50, 70));
+            var txtBrotherName = CreateTextBox("txtBrotherName", new Point(150, 65));
 
-            var lblSerialNumber = new Guna2HtmlLabel { Text = "الرقم التسلسلي", Location = new Point(320, 55), AutoSize = true };
-            var txtSerialNumber = new Guna2TextBox
-            {
-                Location = new Point(400, 50),
-                Width = 200,
-                Name = "txtSerialNumber",
-                PlaceholderText = "الرقم التسلسلي",
-                BorderRadius = 8
-            };
+            var lblLaptopName = CreateLabel("اسم اللاب توب", new Point(50, 110));
+            var txtLaptopName = CreateTextBox("txtLaptopName", new Point(150, 105));
 
-            var lblType = new Guna2HtmlLabel { Text = "النوع", Location = new Point(620, 55), AutoSize = true };
-            var cmbType = new Guna2ComboBox
+            var lblSystemPassword = CreateLabel("كلمة مرور النظام", new Point(50, 150));
+            var txtSystemPassword = CreateTextBox("txtSystemPassword", new Point(150, 145));
+
+            var lblWindowsPassword = CreateLabel("كلمة مرور ويندوز", new Point(50, 190));
+            var txtWindowsPassword = CreateTextBox("txtWindowsPassword", new Point(150, 185));
+
+            var lblHardDrivePassword = CreateLabel("كلمة قرص الصلب", new Point(50, 230));
+            var txtHardDrivePassword = CreateTextBox("txtHardDrivePassword", new Point(150, 225));
+
+            var lblFreezePassword = CreateLabel("كلمة مرور التجميد", new Point(50, 270));
+            var txtFreezePassword = CreateTextBox("txtFreezePassword", new Point(150, 265));
+
+            var lblCode = CreateLabel("الكود", new Point(50, 310));
+            var txtCode = CreateTextBox("txtCode", new Point(150, 305));
+
+            var lblType = CreateLabel("النوع", new Point(50, 350));
+            var txtType = CreateTextBox("txtType", new Point(150, 345));
+
+            var lblSerialNumber = CreateLabel("رقم التسلسل", new Point(50, 390));
+            var txtSerialNumber = CreateTextBox("txtSerialNumber", new Point(150, 385));
+
+            var lblComment = CreateLabel("التعليق", new Point(50, 430));
+            var txtComment = CreateTextBox("txtComment", new Point(150, 425));
+
+            var lblContactNumber = CreateLabel("رقم التواصل", new Point(50, 470));
+            var txtContactNumber = CreateTextBox("txtContactNumber", new Point(150, 465));
+
+            var lblCard = CreateLabel("البطاقة", new Point(50, 510));
+            var txtCard = CreateTextBox("txtCard", new Point(150, 505));
+
+            var btnSave = new Guna2Button
             {
-                Location = new Point(660, 50),
-                Width = 200,
-                Name = "cmbType",
+                Text = "حفظ",
+                Location = new Point(180, 550),
+                Size = new Size(120, 35),
                 BorderRadius = 8,
-                DropDownStyle = ComboBoxStyle.DropDownList
-            };
-
-            var btnClear = new Guna2Button
-            {
-                Text = "مسح",
-                Location = new Point(880, 50),
-                Width = 70,
-                BorderRadius = 8,
-                FillColor = Color.FromArgb(230, 57, 70),
+                FillColor = Color.FromArgb(29, 206, 13), // main green color
                 ForeColor = Color.White,
-                HoverState = { FillColor = Color.FromArgb(200, 30, 50) }
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point)
             };
+            btnSave.Click += BtnSave_Click;
 
-            // ربط الأحداث
-            txtGlobalSearch.TextChanged += (s, e) => { _globalSearchQuery = txtGlobalSearch.Text; ApplyFilter(); };
-            txtLaptopName.TextChanged += (s, e) => { _laptopNameFilter = txtLaptopName.Text; ApplyFilter(); };
-            txtSerialNumber.TextChanged += (s, e) => { _serialNumberFilter = txtSerialNumber.Text; ApplyFilter(); };
-            cmbType.SelectedIndexChanged += (s, e) => { _typeFilter = cmbType.SelectedItem?.ToString() ?? ""; ApplyFilter(); };
-            btnClear.Click += BtnClear_Click;
+            // Fill fields if editing
+            if (_device != null)
+            {
+                txtSource.Text = _device.Source;
+                txtBrotherName.Text = _device.BrotherName;
+                txtLaptopName.Text = _device.LaptopName;
+                txtSystemPassword.Text = _device.SystemPassword;
+                txtWindowsPassword.Text = _device.WindowsPassword;
+                txtHardDrivePassword.Text = _device.HardDrivePassword;
+                txtFreezePassword.Text = _device.FreezePassword;
+                txtCode.Text = _device.Code;
+                txtType.Text = _device.Type;
+                txtSerialNumber.Text = _device.SerialNumber;
+                txtComment.Text = _device.Comment;
+                txtContactNumber.Text = _device.ContactNumber;
+                txtCard.Text = _device.Card;
+            }
 
-            searchPanel.Controls.AddRange(new Control[] {
-                lblGlobalSearch, txtGlobalSearch,
+            // Add all controls
+            this.Controls.AddRange(new Control[]
+            {
+                lblSource, txtSource,
+                lblBrotherName, txtBrotherName,
                 lblLaptopName, txtLaptopName,
+                lblSystemPassword, txtSystemPassword,
+                lblWindowsPassword, txtWindowsPassword,
+                lblHardDrivePassword, txtHardDrivePassword,
+                lblFreezePassword, txtFreezePassword,
+                lblCode, txtCode,
+                lblType, txtType,
                 lblSerialNumber, txtSerialNumber,
-                lblType, cmbType,
-                btnClear
+                lblComment, txtComment,
+                lblContactNumber, txtContactNumber,
+                lblCard, txtCard,
+                btnSave
             });
-
-            // Buttons Panel
-            var buttonsPanel = new Guna2Panel
-            {
-                Location = new Point(20, 180),
-                Size = new Size(this.ClientSize.Width - 40, 50),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                BorderColor = Color.LightGray,
-                BorderThickness = 1,
-                FillColor = Color.White,
-                Radius = 10,
-                ShadowDecoration = { Enabled = true, Shadow = new Padding(5) }
-            };
-
-            var buttonColor = Color.FromArgb(26, 115, 232);
-
-            var btnAddDevice = new Guna2Button { Text = "إضافة جهاز", Location = new Point(20, 10), Width = 110, BorderRadius = 8, FillColor = buttonColor, ForeColor = Color.White };
-            var btnEditDevice = new Guna2Button { Text = "تعديل جهاز", Location = new Point(140, 10), Width = 110, BorderRadius = 8, FillColor = buttonColor, ForeColor = Color.White };
-            var btnDeleteDevice = new Guna2Button { Text = "حذف جهاز", Location = new Point(260, 10), Width = 110, BorderRadius = 8, FillColor = Color.FromArgb(230, 57, 70), ForeColor = Color.White };
-            var btnExportExcel = new Guna2Button { Text = "تصدير", Location = new Point(380, 10), Width = 110, BorderRadius = 8, FillColor = buttonColor, ForeColor = Color.White };
-            var btnImportExcel = new Guna2Button { Text = "اختر ملف Excel", Location = new Point(500, 10), Width = 130, BorderRadius = 8, FillColor = buttonColor, ForeColor = Color.White };
-            var btnAddOperation = new Guna2Button { Text = "إضافة عملية", Location = new Point(640, 10), Width = 110, BorderRadius = 8, FillColor = buttonColor, ForeColor = Color.White };
-            var btnShowOperations = new Guna2Button { Text = "عرض العمليات", Location = new Point(760, 10), Width = 110, BorderRadius = 8, FillColor = buttonColor, ForeColor = Color.White };
-            var btnRefresh = new Guna2Button { Text = "تحديث", Location = new Point(880, 10), Width = 80, BorderRadius = 8, FillColor = buttonColor, ForeColor = Color.White };
-            var btnShowOperationTypes = new Guna2Button { Text = "عرض أنواع العمليات", Location = new Point(970, 10), Width = 130, BorderRadius = 8, FillColor = buttonColor, ForeColor = Color.White };
-
-            btnAddDevice.Click += BtnAddDevice_Click;
-            btnEditDevice.Click += BtnEditDevice_Click;
-            btnDeleteDevice.Click += BtnDeleteDevice_Click;
-            btnExportExcel.Click += BtnExportExcel_Click;
-            btnImportExcel.Click += BtnImportExcel_Click;
-            btnAddOperation.Click += BtnAddOperation_Click;
-            btnShowOperations.Click += BtnShowOperations_Click;
-            btnRefresh.Click += BtnRefresh_Click;
-            btnShowOperationTypes.Click += BtnShowOperationTypes_Click;
-
-            buttonsPanel.Controls.AddRange(new Control[] {
-                btnAddDevice, btnEditDevice, btnDeleteDevice,
-                btnExportExcel, btnImportExcel, btnAddOperation,
-                btnShowOperations, btnRefresh, btnShowOperationTypes
-            });
-
-            // Devices Table
-            var dataGridViewDevices = new Guna2DataGridView
-            {
-                Location = new Point(20, 240),
-                Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 300),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
-                Name = "dataGridViewDevices",
-                RightToLeft = RightToLeft.Yes,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                RowHeadersVisible = false,
-                AllowUserToAddRows = false,
-                ReadOnly = true,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None,
-                CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
-                ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None,
-                EnableHeadersVisualStyles = false,
-                ColumnHeadersHeight = 40,
-                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
-                {
-                    BackColor = Color.FromArgb(26, 115, 232),
-                    ForeColor = Color.White,
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
-                },
-                DefaultCellStyle = new DataGridViewCellStyle
-                {
-                    Font = new Font("Segoe UI", 9),
-                    SelectionBackColor = Color.FromArgb(220, 230, 250),
-                    SelectionForeColor = Color.Black
-                }
-            };
-
-            dataGridViewDevices.SelectionChanged += DataGridViewDevices_SelectionChanged;
-            dataGridViewDevices.DoubleClick += (s, e) => BtnShowOperations_Click(s, e);
-
-            this.Controls.AddRange(new Control[] { lblHeader, searchPanel, buttonsPanel, dataGridViewDevices });
         }
 
         private async void BtnSave_Click(object sender, EventArgs e)
