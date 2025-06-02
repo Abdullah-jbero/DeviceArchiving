@@ -33,44 +33,97 @@ namespace DeviceArchiving.WindowsForm.Forms
         private void SetupUI()
         {
             this.Text = $"إضافة عملية لجهاز: {_laptopName}";
-            this.Size = new Size(400, 400);
+            this.Size = new Size(450, 450);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
 
-            Label lblOperationType = new Label { Text = "نوع العملية", Location = new Point(50, 30), AutoSize = true };
-            ComboBox cmbOperationType = new ComboBox
+            var lblOperationType = new Guna.UI2.WinForms.Guna2HtmlLabel
+            {
+                Text = "نوع العملية",
+                Location = new Point(50, 30),
+                AutoSize = true
+            };
+
+            var cmbOperationType = new Guna.UI2.WinForms.Guna2ComboBox
             {
                 Location = new Point(150, 30),
                 Width = 200,
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Name = "cmbOperationType"
+                Name = "cmbOperationType",
+                DropDownStyle = ComboBoxStyle.DropDownList
             };
 
-            Label lblOldValue = new Label { Text = "القيمة القديمة", Location = new Point(50, 70), AutoSize = true };
-            TextBox txtOldValue = new TextBox { Location = new Point(150, 70), Width = 200, Name = "txtOldValue" };
-
-            Label lblNewValue = new Label { Text = "القيمة الجديدة", Location = new Point(50, 110), AutoSize = true };
-            TextBox txtNewValue = new TextBox { Location = new Point(150, 110), Width = 200, Name = "txtNewValue" };
-
-            Label lblComment = new Label { Text = "التعليق", Location = new Point(50, 150), AutoSize = true };
-            TextBox txtComment = new TextBox
+            var lblOldValue = new Guna.UI2.WinForms.Guna2HtmlLabel
             {
-                Location = new Point(150, 150),
+                Text = "القيمة القديمة",
+                Location = new Point(50, 80),
+                AutoSize = true
+            };
+
+            var txtOldValue = new Guna.UI2.WinForms.Guna2TextBox
+            {
+                Location = new Point(150, 80),
+                Width = 200,
+                Name = "txtOldValue"
+            };
+
+            var lblNewValue = new Guna.UI2.WinForms.Guna2HtmlLabel
+            {
+                Text = "القيمة الجديدة",
+                Location = new Point(50, 130),
+                AutoSize = true
+            };
+
+            var txtNewValue = new Guna.UI2.WinForms.Guna2TextBox
+            {
+                Location = new Point(150, 130),
+                Width = 200,
+                Name = "txtNewValue"
+            };
+
+            var lblComment = new Guna.UI2.WinForms.Guna2HtmlLabel
+            {
+                Text = "التعليق",
+                Location = new Point(50, 180),
+                AutoSize = true
+            };
+
+            var txtComment = new Guna.UI2.WinForms.Guna2TextBox
+            {
+                Location = new Point(150, 180),
                 Width = 200,
                 Height = 60,
-                Multiline = true,
-                Name = "txtComment"
+                Name = "txtComment",
+                Multiline = true
             };
 
-            Button btnSave = new Button { Text = "حفظ", Location = new Point(150, 230), Width = 100 };
-            Button btnCancel = new Button { Text = "إلغاء", Location = new Point(260, 230), Width = 100 };
+            var btnSave = new Guna.UI2.WinForms.Guna2Button
+            {
+                Text = "حفظ",
+                Location = new Point(150, 270),
+                Width = 100
+            };
+
+            var btnCancel = new Guna.UI2.WinForms.Guna2Button
+            {
+                Text = "إلغاء",
+                Location = new Point(260, 270),
+                Width = 100
+            };
 
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += BtnCancel_Click;
 
-            this.Controls.AddRange(new Control[] { lblOperationType, cmbOperationType, lblOldValue, txtOldValue, lblNewValue, txtNewValue, lblComment, txtComment, btnSave, btnCancel });
+            this.Controls.AddRange(new Control[]
+            {
+        lblOperationType, cmbOperationType,
+        lblOldValue, txtOldValue,
+        lblNewValue, txtNewValue,
+        lblComment, txtComment,
+        btnSave, btnCancel
+            });
         }
+
 
         private void LoadOperationTypes()
         {

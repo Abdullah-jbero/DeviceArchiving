@@ -1,6 +1,7 @@
 ﻿using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Service;
 using DeviceArchiving.WindowsForm.Dtos;
+using Guna.UI2.WinForms;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -15,36 +16,53 @@ namespace DeviceArchiving.WindowsForm.Forms
         private readonly List<ExcelDevice> _devices;
         private readonly Action<List<ExcelDevice>> _uploadAction;
         private readonly IDeviceService _deviceService;
-        private DataGridView _grid;
-        private Button _btnUpload;
+        private Guna2DataGridView _grid;
+        private Guna2Button _btnUpload;
 
         public ExcelPreviewForm(List<ExcelDevice> devices, Action<List<ExcelDevice>> uploadAction)
         {
             _devices = devices;
             _uploadAction = uploadAction;
             _deviceService = Program.Services.GetService<IDeviceService>();
-            SetupUI();
+            InitializeUI();
         }
 
-        private void SetupUI()
+        private void InitializeUI()
         {
             this.Text = "معاينة بيانات Excel";
-            this.Size = new Size(900, 500);
+            this.Size = new Size(1000, 550);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.RightToLeft = RightToLeft.Yes;
+            this.Font = new Font("Segoe UI", 10);
 
-            _grid = new DataGridView
+            _grid = new Guna2DataGridView
             {
                 Dock = DockStyle.Fill,
                 RightToLeft = RightToLeft.Yes,
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 MultiSelect = false,
-                AutoGenerateColumns = false
+                AutoGenerateColumns = false,
+                EnableHeadersVisualStyles = false,
+                BorderStyle = BorderStyle.None,
+                BackgroundColor = Color.White,
+                GridColor = Color.LightGray,
+                AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle { BackColor = Color.FromArgb(245, 245, 245) },
+                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = Color.FromArgb(94, 148, 255),
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    Alignment = DataGridViewContentAlignment.MiddleCenter
+                },
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    Font = new Font("Segoe UI", 10),
+                    SelectionBackColor = Color.FromArgb(204, 228, 247),
+                    SelectionForeColor = Color.Black
+                }
             };
 
             _grid.CellValueChanged += GridCellValueChanged;
-            _grid.Columns.Clear();
-            _grid.AutoGenerateColumns = false;
 
             _grid.Columns.Add(new DataGridViewCheckBoxColumn { Name = "IsSelected", HeaderText = "تحديد", DataPropertyName = "IsSelected" });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Source", HeaderText = "الجهة", DataPropertyName = "Source" });
@@ -61,24 +79,64 @@ namespace DeviceArchiving.WindowsForm.Forms
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Comment", HeaderText = "ملاحظات", DataPropertyName = "Comment" });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "ContactNumber", HeaderText = "رقم التواصل", DataPropertyName = "ContactNumber" });
 
-            // أخيرًا: ربط المصدر
             _grid.DataSource = _devices;
 
+            // Buttons
+            var btnSelectAll = new Guna2Button
+            {
+                Text = "تحديد الكل",
+                Width = 120,
+                Margin = new Padding(10)
+            };
+            btnSelectAll.Click += (s, e) =>
+            {
+                foreach (var d in _devices) d.IsSelected = true;
+                _grid.Refresh();
+            };
 
-            var btnSelectAll = new Button { Text = "تحديد الكل", Dock = DockStyle.Left, Width = 100 };
-            var btnDeselectAll = new Button { Text = "إلغاء تحديد الكل", Dock = DockStyle.Left, Width = 120 };
-            var btnCancel = new Button { Text = "إلغاء", Dock = DockStyle.Right, Width = 100 };
-            _btnUpload = new Button { Text = "رفع الأجهزة المحددة", Dock = DockStyle.Right, Width = 150 };
+            var btnDeselectAll = new Guna2Button
+            {
+                Text = "إلغاء تحديد الكل",
+                Width = 150,
+                Margin = new Padding(10)
+            };
+            btnDeselectAll.Click += (s, e) =>
+            {
+                foreach (var d in _devices) d.IsSelected = false;
+                _grid.Refresh();
+            };
 
-            btnSelectAll.Click += BtnSelectAll_Click;
-            btnDeselectAll.Click += BtnDeselectAll_Click;
+            var btnCancel = new Guna2Button
+            {
+                Text = "إلغاء",
+                Width = 100,
+                Margin = new Padding(10),
+                FillColor = Color.Gray
+            };
             btnCancel.Click += (s, e) => this.Close();
+
+            _btnUpload = new Guna2Button
+            {
+                Text = "رفع الأجهزة المحددة",
+                Width = 180,
+                Margin = new Padding(10),
+                FillColor = Color.FromArgb(94, 148, 255)
+            };
             _btnUpload.Click += BtnUpload_Click;
 
-            var btnPanel = new Panel { Dock = DockStyle.Bottom, Height = 50 };
-            btnPanel.Controls.AddRange(new Control[] { _btnUpload, btnSelectAll, btnDeselectAll, btnCancel });
+            var buttonPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 60,
+                FlowDirection = FlowDirection.RightToLeft,
+                Padding = new Padding(10)
+            };
 
-            this.Controls.AddRange(new Control[] { _grid, btnPanel });
+            buttonPanel.Controls.AddRange(new Control[] { _btnUpload, btnCancel, btnDeselectAll, btnSelectAll });
+
+            // Add controls
+            this.Controls.Add(_grid);
+            this.Controls.Add(buttonPanel);
         }
 
         private void GridCellValueChanged(object sender, DataGridViewCellEventArgs e)
@@ -89,47 +147,26 @@ namespace DeviceArchiving.WindowsForm.Forms
             }
         }
 
-        private void BtnSelectAll_Click(object sender, EventArgs e)
-        {
-            foreach (var device in _devices)
-            {
-                device.IsSelected = true;
-            }
-            _grid.Refresh();
-        }
-
-        private void BtnDeselectAll_Click(object sender, EventArgs e)
-        {
-            foreach (var device in _devices)
-            {
-                device.IsSelected = false;
-            }
-            _grid.Refresh();
-        }
-
         private async void BtnUpload_Click(object sender, EventArgs e)
         {
-
-
-
             var selectedDevices = _devices
                 .Where(d => d.IsSelected)
-                .Select(device => new DeviceUploadDto
+                .Select(d => new DeviceUploadDto
                 {
-                    Source = device.Source,
-                    BrotherName = device.BrotherName,
-                    LaptopName = device.LaptopName,
-                    SystemPassword = device.SystemPassword,
-                    WindowsPassword = device.WindowsPassword,
-                    HardDrivePassword = device.HardDrivePassword,
-                    FreezePassword = device.FreezePassword,
-                    Code = device.Code,
-                    Type = device.Type,
-                    SerialNumber = device.SerialNumber,
-                    Card = device.Card,
-                    Comment = device.Comment,
-                    ContactNumber = device.ContactNumber,
-                    IsUpdate = device.IsDuplicateSerial || device.IsDuplicateLaptopName
+                    Source = d.Source,
+                    BrotherName = d.BrotherName,
+                    LaptopName = d.LaptopName,
+                    SystemPassword = d.SystemPassword,
+                    WindowsPassword = d.WindowsPassword,
+                    HardDrivePassword = d.HardDrivePassword,
+                    FreezePassword = d.FreezePassword,
+                    Code = d.Code,
+                    Type = d.Type,
+                    SerialNumber = d.SerialNumber,
+                    Card = d.Card,
+                    Comment = d.Comment,
+                    ContactNumber = d.ContactNumber,
+                    IsUpdate = d.IsDuplicateSerial || d.IsDuplicateLaptopName
                 })
                 .ToList();
 
@@ -144,19 +181,15 @@ namespace DeviceArchiving.WindowsForm.Forms
             try
             {
                 var response = await _deviceService.ProcessDevicesAsync(selectedDevices);
-
                 if (response.Success)
                 {
                     MessageBox.Show(
                         response.Message ?? $"تم معالجة {response.Data} جهاز{(response.Data == 1 ? "" : "ات")} بنجاح",
-                        "نجاح",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information
+                        "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information
                     );
 
-
                     Properties.Settings.Default.CanUploadExcel = false;
-                    Properties.Settings.Default.Save(); // Save the setting
+                    Properties.Settings.Default.Save();
                     _devices.Clear();
                     _uploadAction?.Invoke(new List<ExcelDevice>());
                     this.Close();
