@@ -37,6 +37,7 @@ namespace DeviceArchiving.Service
         {
             return _context.Operations
                 .Where(o => o.DeviceId == deviceId)
+                .Include(o=>o.User)
                 .ToListAsync();
         }
     }

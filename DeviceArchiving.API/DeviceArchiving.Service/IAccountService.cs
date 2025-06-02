@@ -6,7 +6,7 @@ namespace DeviceArchiving.Service
 {
     public interface IAccountService
     {
-        Task<BaseResponse<AuthenticationResponse>> AuthenticateAsync(AuthenticationRequest request);
+        Task<BaseResponse<AuthenticationResponse>> AuthenticateAsync( AuthenticationRequest request);
         Task<BaseResponse<string>> AddUserAsync(AuthenticationRequest request);
     }
 }

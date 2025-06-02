@@ -12,11 +12,12 @@ namespace DeviceArchiving.Data;
 
 public class UserIdInterceptor : ISaveChangesInterceptor
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly Func<int> _getCurrentUserId;
 
-    public UserIdInterceptor(IHttpContextAccessor httpContextAccessor)
+    // Inject a delegate to get the current user ID
+    public UserIdInterceptor(Func<int> getCurrentUserId)
     {
-        _httpContextAccessor = httpContextAccessor;
+        _getCurrentUserId = getCurrentUserId;
     }
 
     public InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
@@ -38,11 +39,9 @@ public class UserIdInterceptor : ISaveChangesInterceptor
     {
         if (context == null) return;
 
-        // Get the current user's ID from the HTTP context (e.g., from JWT or authentication)
-        var userId = GetCurrentUserId();
-        if (userId == 0) return; // No user ID available, skip
+        var userId = _getCurrentUserId();
+        if (userId == 0) return; // No valid user ID
 
-        // Track entities that implement IAuditableEntity
         var entries = context.ChangeTracker
             .Entries<IAuditableEntity>()
             .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
@@ -56,10 +55,7 @@ public class UserIdInterceptor : ISaveChangesInterceptor
         }
     }
 
-    private int GetCurrentUserId()
-    {
-        // Example: Extract UserId from ClaimsPrincipal (adjust based on your authentication setup)
-        var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-    }
+
+
+
 }

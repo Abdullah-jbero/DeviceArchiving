@@ -20,10 +20,9 @@ services.AddScoped<IDeviceService, DeviceService>();
 services.AddScoped<IOperationService, OperationService>();
 services.AddScoped<IOperationTypeService, OperationTypeService>();
 services.AddScoped<IAccountService, AccountService>();
-// 🗄️ Database (SQLite or SQL Server based on configuration)
+// 🗄️ Database (SQL Server based on configuration)
 services.AddHttpContextAccessor();
 services.AddSingleton<UserIdInterceptor>();
-
 services.AddDbContextFactory<DeviceArchivingContext>((serviceProvider, options) =>
 {
     var userIdInterceptor = serviceProvider.GetRequiredService<UserIdInterceptor>();
@@ -33,8 +32,6 @@ services.AddDbContextFactory<DeviceArchivingContext>((serviceProvider, options) 
     options.UseSqlServer(connectionString);
     options.AddInterceptors(userIdInterceptor);
 });
-
-
 // Bind JwtSettings
 services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JWTSettings"));
