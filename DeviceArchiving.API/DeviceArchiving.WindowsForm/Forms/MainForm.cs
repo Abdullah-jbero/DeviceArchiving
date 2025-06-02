@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using ClosedXML.Excel;
 using DeviceArchiving.WindowsForm.Dtos;
-namespace DeviceArchiving.WindowsForm
+namespace DeviceArchiving.WindowsForm.Forms
 {
     public partial class MainForm : Form
     {

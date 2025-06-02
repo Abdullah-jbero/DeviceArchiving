@@ -1,4 +1,4 @@
-﻿namespace DeviceArchiving.WindowsForm
+﻿namespace DeviceArchiving.WindowsForm.Forms
 {
     partial class MainForm
     {
