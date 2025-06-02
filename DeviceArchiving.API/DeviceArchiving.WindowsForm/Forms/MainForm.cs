@@ -17,6 +17,7 @@ namespace DeviceArchiving.WindowsForm
     {
         private readonly IDeviceService _deviceService;
         private readonly IOperationService _operationService;
+        private readonly IOperationTypeService _operationTypeService;
         private readonly IAccountService _accountService;
         private readonly AuthenticationResponse _user;
         private List<GetAllDevicesDto> _devices = new List<GetAllDevicesDto>();
@@ -35,6 +36,7 @@ namespace DeviceArchiving.WindowsForm
             _user = user;
             _deviceService = Program.Services.GetService<IDeviceService>();
             _operationService = Program.Services.GetService<IOperationService>();
+            _operationTypeService = Program.Services.GetService<IOperationTypeService>();
             this.RightToLeft = RightToLeft.Yes;
             this.RightToLeftLayout = true;
             SetupUI();
@@ -79,7 +81,9 @@ namespace DeviceArchiving.WindowsForm
             Button btnImportExcel = new Button { Text = "«Œ — „·› Excel", Location = new Point(460, 10), Width = 100 };
             Button btnAddOperation = new Button { Text = "≈÷«›… ⁄„·Ì…", Location = new Point(570, 10), Width = 100 };
             Button btnShowOperations = new Button { Text = "⁄—÷ «·⁄„·Ì« ", Location = new Point(680, 10), Width = 100 };
-            Button btnRefresh = new Button { Text = " ÕœÌÀ", Location = new Point(790, 10), Width = 100 }; // ÷»ÿ «·„Êﬁ⁄ ·ÌﬂÊ‰ œ«Œ· «··ÊÕ…
+            Button btnRefresh = new Button { Text = " ÕœÌÀ", Location = new Point(790, 10), Width = 100 };
+            Button btnShowOperationTypes = new Button { Text = "⁄—÷ √‰Ê«⁄ «·⁄„·Ì« ", Location = new Point(900, 10), Width = 100 };
+
             btnAddDevice.Click += BtnAddDevice_Click;
             btnEditDevice.Click += BtnEditDevice_Click;
             btnDeleteDevice.Click += BtnDeleteDevice_Click;
@@ -88,7 +92,8 @@ namespace DeviceArchiving.WindowsForm
             btnAddOperation.Click += BtnAddOperation_Click;
             btnShowOperations.Click += BtnShowOperations_Click;
             btnRefresh.Click += BtnRefresh_Click;
-            buttonsPanel.Controls.AddRange(new Control[] { btnAddDevice, btnEditDevice, btnDeleteDevice, btnExportExcel, btnImportExcel, btnAddOperation, btnShowOperations, btnRefresh });
+            btnShowOperationTypes.Click += BtnShowOperationTypes_Click;
+            buttonsPanel.Controls.AddRange(new Control[] { btnAddDevice, btnEditDevice, btnDeleteDevice, btnExportExcel, btnImportExcel, btnAddOperation, btnShowOperations, btnRefresh , btnShowOperationTypes });
 
             // Devices Table
             DataGridView dataGridViewDevices = new DataGridView
@@ -125,6 +130,14 @@ namespace DeviceArchiving.WindowsForm
             finally
             {
                 _loading = false;
+            }
+        }
+
+        private void BtnShowOperationTypes_Click(object sender, EventArgs e)
+        {
+            using (var form = new OperationTypeListForm(_operationTypeService))
+            {
+                form.ShowDialog();
             }
         }
         private void BtnRefresh_Click(object sender, EventArgs e)
@@ -552,7 +565,7 @@ namespace DeviceArchiving.WindowsForm
                 MessageBox.Show("Ì—ÃÏ  ÕœÌœ ÃÂ«“ ·≈÷«›… ⁄„·Ì….", " Õ–Ì—", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            AddOperationDialog addOperationDialog = new AddOperationDialog(_operationService, _selectedDevice.Id, _selectedDevice.LaptopName);
+            AddOperationDialog addOperationDialog = new AddOperationDialog(_operationTypeService,_operationService , _selectedDevice.Id, _selectedDevice.LaptopName);
             if (addOperationDialog.ShowDialog() == DialogResult.OK)
             {
                 MessageBox.Show(" „ ≈÷«›… «·⁄„·Ì… »‰Ã«Õ.", "‰Ã«Õ", MessageBoxButtons.OK, MessageBoxIcon.Information);
