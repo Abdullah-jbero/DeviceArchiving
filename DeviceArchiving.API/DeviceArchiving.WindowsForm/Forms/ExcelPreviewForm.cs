@@ -29,8 +29,9 @@ namespace DeviceArchiving.WindowsForm.Forms
 
         private void InitializeUI()
         {
-            this.Text = "معاينة بيانات Excel";
-            this.Size = new Size(1000, 550);
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.Width = Screen.PrimaryScreen.WorkingArea.Width;
+            this.Height = 550;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.RightToLeft = RightToLeft.Yes;
             this.Font = new Font("Segoe UI", 10);
