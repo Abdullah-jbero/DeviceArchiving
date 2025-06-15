@@ -1,5 +1,7 @@
 ﻿using DeviceArchiving.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace DeviceArchiving.Data.Contexts;
 public class DeviceArchivingContext : DbContext
@@ -28,3 +30,6 @@ public class DeviceArchivingContext : DbContext
         modelBuilder.Entity<Device>().HasIndex(u => u.SerialNumber).IsUnique();
     }
 }
+
+
+

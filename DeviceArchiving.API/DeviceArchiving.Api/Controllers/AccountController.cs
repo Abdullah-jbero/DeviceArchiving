@@ -1,7 +1,7 @@
-﻿using DeviceArchiving.Service;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Data.Dto.Users;
+using DeviceArchiving.Service.AccountServices;
 
 namespace WebApi.Controllers
 {

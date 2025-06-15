@@ -1,5 +1,5 @@
 ﻿using DeviceArchiving.Data.Dto.Devices;
-using DeviceArchiving.Service;
+using DeviceArchiving.Service.DeviceServices;
 using DeviceArchiving.WindowsForm.Dtos;
 using Guna.UI2.WinForms;
 using Microsoft.Extensions.DependencyInjection;
@@ -77,8 +77,10 @@ namespace DeviceArchiving.WindowsForm.Forms
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Type", HeaderText = "النوع", DataPropertyName = "Type" });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "SerialNumber", HeaderText = "الرقم التسلسلي", DataPropertyName = "SerialNumber" });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Card", HeaderText = "الكرت", DataPropertyName = "Card" });
-            _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Comment", HeaderText = "ملاحظات", DataPropertyName = "Comment" });
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "CreatedAt", HeaderText = "التاريخ", DataPropertyName = "CreatedAt" });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "ContactNumber", HeaderText = "رقم التواصل", DataPropertyName = "ContactNumber" });
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Comment", HeaderText = "ملاحظات", DataPropertyName = "Comment" });
+
 
             _grid.DataSource = _devices;
 
@@ -147,7 +149,7 @@ namespace DeviceArchiving.WindowsForm.Forms
                 _devices[e.RowIndex].IsSelected = Convert.ToBoolean(_grid.Rows[e.RowIndex].Cells[0].Value);
             }
         }
-
+        
         private async void BtnUpload_Click(object sender, EventArgs e)
         {
             var selectedDevices = _devices

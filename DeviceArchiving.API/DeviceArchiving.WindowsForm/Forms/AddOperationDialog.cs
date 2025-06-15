@@ -1,10 +1,12 @@
 ﻿using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Data.Entities;
-using DeviceArchiving.Service;
+using DeviceArchiving.Service.OperationServices;
+using DeviceArchiving.Service.OperationTypeServices;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DeviceArchiving.WindowsForm.Forms
@@ -38,98 +40,102 @@ namespace DeviceArchiving.WindowsForm.Forms
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
 
-            var lblOperationType = new Guna.UI2.WinForms.Guna2HtmlLabel
-            {
-                Text = "نوع العملية",
-                Location = new Point(50, 30),
-                AutoSize = true
-            };
+            // Create labels and controls
+            var lblOperationType = CreateLabel("نوع العملية", true, new Point(40, 30));
+            var cmbOperationType = CreateComboBox(new Point(160, 30), "cmbOperationType");
 
-            var cmbOperationType = new Guna.UI2.WinForms.Guna2ComboBox
-            {
-                Location = new Point(150, 30),
-                Width = 200,
-                Name = "cmbOperationType",
-                DropDownStyle = ComboBoxStyle.DropDownList
-            };
+            var lblOldValue = CreateLabel("القيمة القديمة", false, new Point(40, 80));
+            var txtOldValue = CreateTextBox(new Point(160, 80), "txtOldValue");
 
-            var lblOldValue = new Guna.UI2.WinForms.Guna2HtmlLabel
-            {
-                Text = "القيمة القديمة",
-                Location = new Point(50, 80),
-                AutoSize = true
-            };
+            var lblNewValue = CreateLabel("القيمة الجديدة", false, new Point(40, 130));
+            var txtNewValue = CreateTextBox(new Point(160, 130), "txtNewValue");
 
-            var txtOldValue = new Guna.UI2.WinForms.Guna2TextBox
-            {
-                Location = new Point(150, 80),
-                Width = 200,
-                Name = "txtOldValue"
-            };
+            var lblComment = CreateLabel("التعليق", false, new Point(40, 180));
+            var txtComment = CreateMultilineTextBox(new Point(160, 180), "txtComment");
 
-            var lblNewValue = new Guna.UI2.WinForms.Guna2HtmlLabel
-            {
-                Text = "القيمة الجديدة",
-                Location = new Point(50, 130),
-                AutoSize = true
-            };
+            var btnSave = CreateButton("حفظ", new Point(160, 270));
+            var btnCancel = CreateButton("إلغاء", new Point(265, 270));
 
-            var txtNewValue = new Guna.UI2.WinForms.Guna2TextBox
-            {
-                Location = new Point(150, 130),
-                Width = 200,
-                Name = "txtNewValue"
-            };
-
-            var lblComment = new Guna.UI2.WinForms.Guna2HtmlLabel
-            {
-                Text = "التعليق",
-                Location = new Point(50, 180),
-                AutoSize = true
-            };
-
-            var txtComment = new Guna.UI2.WinForms.Guna2TextBox
-            {
-                Location = new Point(150, 180),
-                Width = 200,
-                Height = 60,
-                Name = "txtComment",
-                Multiline = true
-            };
-
-            var btnSave = new Guna.UI2.WinForms.Guna2Button
-            {
-                Text = "حفظ",
-                Location = new Point(150, 270),
-                Width = 100
-            };
-
-            var btnCancel = new Guna.UI2.WinForms.Guna2Button
-            {
-                Text = "إلغاء",
-                Location = new Point(260, 270),
-                Width = 100
-            };
-
+            // Set event handlers
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += BtnCancel_Click;
 
+            // Add controls to the form
             this.Controls.AddRange(new Control[]
             {
-        lblOperationType, cmbOperationType,
-        lblOldValue, txtOldValue,
-        lblNewValue, txtNewValue,
-        lblComment, txtComment,
-        btnSave, btnCancel
+                lblOperationType, cmbOperationType,
+                lblOldValue, txtOldValue,
+                lblNewValue, txtNewValue,
+                lblComment, txtComment,
+                btnSave,
+                btnCancel
             });
         }
 
+        private Guna.UI2.WinForms.Guna2HtmlLabel CreateLabel(string text, bool isRequired, Point location)
+        {
+            string labelText = text + (isRequired == false ? " - اختياري" : "");
 
-        private void LoadOperationTypes()
+            return new Guna.UI2.WinForms.Guna2HtmlLabel
+            {
+                Text = labelText,
+                Location = location,
+                AutoSize = true
+            };
+        }
+
+        private Guna.UI2.WinForms.Guna2ComboBox CreateComboBox(Point location, string name)
+        {
+
+            return new Guna.UI2.WinForms.Guna2ComboBox
+            {
+                Location = location,
+                Width = 200,
+                Name = name,
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+        }
+
+        private Guna.UI2.WinForms.Guna2TextBox CreateTextBox(Point location, string name)
+        {
+            return new Guna.UI2.WinForms.Guna2TextBox
+            {
+                Location = location,
+                Width = 200,
+                Name = name
+            };
+        }
+
+        private Guna.UI2.WinForms.Guna2TextBox CreateMultilineTextBox(Point location, string name)
+        {
+            return new Guna.UI2.WinForms.Guna2TextBox
+            {
+                Location = location,
+                Width = 200,
+                Height = 60,
+                Name = name,
+                Multiline = true
+            };
+        }
+
+        private Guna.UI2.WinForms.Guna2Button CreateButton(string text, Point location)
+        {
+            return new Guna.UI2.WinForms.Guna2Button
+            {
+                Text = text,
+                Location = location,
+                Width = 100
+            };
+        }
+
+
+        private async Task LoadOperationTypes()
         {
             try
             {
-                _operationTypes = _operationTypeService.GetAllOperationsTypes(null).ToList();
+                var operationTypes = await _operationTypeService.GetAllOperationsTypes(null);
+                _operationTypes = operationTypes.ToList();
+
                 var cmbOperationType = this.Controls["cmbOperationType"] as ComboBox;
                 if (cmbOperationType != null)
                 {
@@ -149,37 +155,43 @@ namespace DeviceArchiving.WindowsForm.Forms
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
-            var cmbOperationType = this.Controls["cmbOperationType"] as ComboBox;
-            var txtOldValue = this.Controls["txtOldValue"] as TextBox;
-            var txtNewValue = this.Controls["txtNewValue"] as TextBox;
-            var txtComment = this.Controls["txtComment"] as TextBox;
+            var cmbOperationType = this.Controls["cmbOperationType"] as Guna.UI2.WinForms.Guna2ComboBox;
+            var txtOldValue = this.Controls["txtOldValue"] as Guna.UI2.WinForms.Guna2TextBox;
+            var txtNewValue = this.Controls["txtNewValue"] as Guna.UI2.WinForms.Guna2TextBox;
+            var txtComment = this.Controls["txtComment"] as Guna.UI2.WinForms.Guna2TextBox;
 
-            if (cmbOperationType.SelectedItem == null)
+            if (cmbOperationType?.SelectedItem == null)
             {
                 MessageBox.Show("يرجى اختيار نوع العملية", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
+            if (_operation == null)
+            {
+                _operation = new Operation();
+            }
+
             _operation.OperationName = cmbOperationType.SelectedItem.ToString();
-            _operation.OldValue = string.IsNullOrWhiteSpace(txtOldValue.Text) ? null : txtOldValue.Text;
-            _operation.NewValue = string.IsNullOrWhiteSpace(txtNewValue.Text) ? null : txtNewValue.Text;
-            _operation.Comment = string.IsNullOrWhiteSpace(txtComment.Text) ? null : txtComment.Text;
+            _operation.OldValue = string.IsNullOrWhiteSpace(txtOldValue?.Text) ? string.Empty : txtOldValue.Text;
+            _operation.NewValue = string.IsNullOrWhiteSpace(txtNewValue?.Text) ? string.Empty : txtNewValue.Text;
+            _operation.Comment = string.IsNullOrWhiteSpace(txtComment?.Text) ? string.Empty : txtComment.Text;
 
             var createOperation = new CreateOperation()
             {
                 DeviceId = _deviceId,
                 NewValue = _operation.NewValue,
                 OldValue = _operation.OldValue,
-                OperationName = cmbOperationType.SelectedItem.ToString(),
+                OperationName = _operation.OperationName,
                 Comment = _operation.Comment,
 
             };
+
             _operationService.AddOperations(createOperation);
 
-            MessageBox.Show("تم حفظ العملية بنجاح", "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
+
 
         private void BtnCancel_Click(object sender, EventArgs e)
         {

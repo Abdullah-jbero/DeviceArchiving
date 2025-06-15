@@ -1,4 +1,4 @@
-namespace DeviceArchiving.WindowsForm.Forms;
+namespace DeviceArchiving.Service;
 
 public static class AppSession
 {

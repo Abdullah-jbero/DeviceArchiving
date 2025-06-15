@@ -1,10 +1,11 @@
 ﻿using DeviceArchiving.Data.Entities;
-using DeviceArchiving.Service;
+using DeviceArchiving.Service.OperationTypeServices;
 using Guna.UI2.WinForms;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DeviceArchiving.WindowsForm.Forms
@@ -175,7 +176,6 @@ namespace DeviceArchiving.WindowsForm.Forms
                 dataGridViewOperationTypes
             });
 
-            // عند تغيير حجم النافذة يتم تحديث حجم الجدول وموقع زر الإضافة
             this.Resize += (s, e) =>
             {
                 dataGridViewOperationTypes.Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 200);
@@ -183,11 +183,11 @@ namespace DeviceArchiving.WindowsForm.Forms
             };
         }
 
-        private void LoadOperationTypes()
+        private async Task LoadOperationTypes()
         {
             try
             {
-                _operationTypes = _operationTypeService.GetAllOperationsTypes(_searchTerm).ToList();
+                _operationTypes = (await _operationTypeService.GetAllOperationsTypes(_searchTerm)).ToList();
                 UpdateDataGridView();
             }
             catch (Exception ex)

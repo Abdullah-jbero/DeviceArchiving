@@ -1,7 +1,8 @@
 ﻿using DeviceArchiving.Data.Contexts;
 using DeviceArchiving.Data.Entities;
-using DeviceArchiving.Service;
 using Microsoft.EntityFrameworkCore;
+
+namespace DeviceArchiving.Service.OperationTypeServices;
 
 public class OperationTypeService : IOperationTypeService
 {
@@ -12,26 +13,26 @@ public class OperationTypeService : IOperationTypeService
         _contextFactory = contextFactory;
     }
 
-    public void AddOperationType(OperationType operationType)
+    public async Task AddOperationType(OperationType operationType)
     {
         using var context = _contextFactory.CreateDbContext();
         context.OperationsTypes.Add(operationType);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
     }
 
-    public IEnumerable<OperationType> GetAllOperationsTypes(string? searchTerm)
+    public async Task<IEnumerable<OperationType>> GetAllOperationsTypes(string? searchTerm)
     {
         using var context = _contextFactory.CreateDbContext();
         if (!string.IsNullOrEmpty(searchTerm))
         {
-            return context.OperationsTypes
-                .Where(x => (x.Name != null && x.Name.Contains(searchTerm)) || (x.Description != null && x.Description.Contains(searchTerm)))
-                .ToList();
+            return await context.OperationsTypes
+                .Where(x => x.Name != null && x.Name.Contains(searchTerm) || x.Description != null && x.Description.Contains(searchTerm))
+                .ToListAsync();
         }
         return context.OperationsTypes.ToList();
     }
 
-    public void UpdateOperationType(OperationType operationType)
+    public async Task UpdateOperationType(OperationType operationType)
     {
         using var context = _contextFactory.CreateDbContext();
         var existingOperationType = context.OperationsTypes.Find(operationType.Id);
@@ -42,14 +43,14 @@ public class OperationTypeService : IOperationTypeService
         context.SaveChanges();
     }
 
-    public void DeleteOperationType(int id)
+    public async Task DeleteOperationType(int id)
     {
         using var context = _contextFactory.CreateDbContext();
         var operationType = context.OperationsTypes.Find(id);
         if (operationType != null)
         {
             context.OperationsTypes.Remove(operationType);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
         }
     }
 }

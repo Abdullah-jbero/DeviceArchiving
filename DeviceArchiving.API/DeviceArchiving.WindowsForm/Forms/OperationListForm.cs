@@ -1,11 +1,11 @@
-﻿using DeviceArchiving.Service;
-using DeviceArchiving.Data.Dto.Devices;
+﻿using DeviceArchiving.Data.Dto.Devices;
 using Guna.UI2.WinForms;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using DeviceArchiving.Service.OperationServices;
 
 namespace DeviceArchiving.WindowsForm.Forms
 {
@@ -99,7 +99,6 @@ namespace DeviceArchiving.WindowsForm.Forms
 
                 if (operations == null || !operations.Any())
                 {
-                    MessageBox.Show("لا يوجد بيانات للعمليات.", "تحذير", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 

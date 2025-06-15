@@ -16,4 +16,5 @@ public class DuplicateCheckResponse
 public class DeviceUploadDto : CreateDeviceDto
 {
     public bool IsUpdate { get; set; } 
+    public DateTime CreatedAt { get; set; }
 }

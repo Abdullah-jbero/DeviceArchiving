@@ -2,7 +2,7 @@
 using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Data.Dto.Users;
 
-namespace DeviceArchiving.Service
+namespace DeviceArchiving.Service.AccountServices
 {
     public interface IAccountService
     {
@@ -10,3 +10,4 @@ namespace DeviceArchiving.Service
         Task<BaseResponse<string>> AddUserAsync(AuthenticationRequest request);
     }
 }
+

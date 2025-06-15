@@ -1,7 +1,10 @@
 ﻿using DeviceArchiving.Data;
 using DeviceArchiving.Data.Contexts;
 using DeviceArchiving.Data.Dto;
-using DeviceArchiving.Service;
+using DeviceArchiving.Service.AccountServices;
+using DeviceArchiving.Service.DeviceServices;
+using DeviceArchiving.Service.OperationServices;
+using DeviceArchiving.Service.OperationTypeServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -22,15 +25,15 @@ services.AddScoped<IOperationTypeService, OperationTypeService>();
 services.AddScoped<IAccountService, AccountService>();
 // 🗄️ Database (SQL Server based on configuration)
 services.AddHttpContextAccessor();
-services.AddSingleton<UserIdInterceptor>();
+//services.AddSingleton<UserIdInterceptor>();
 services.AddDbContextFactory<DeviceArchivingContext>((serviceProvider, options) =>
 {
-    var userIdInterceptor = serviceProvider.GetRequiredService<UserIdInterceptor>();
+    //var userIdInterceptor = serviceProvider.GetRequiredService<UserIdInterceptor>();
     var connectionString = configuration.GetConnectionString("DefaultConnection");
     if (string.IsNullOrEmpty(connectionString))
         throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
     options.UseSqlServer(connectionString);
-    options.AddInterceptors(userIdInterceptor);
+    //options.AddInterceptors(userIdInterceptor);
 });
 // Bind JwtSettings
 services.Configure<JwtSettings>(

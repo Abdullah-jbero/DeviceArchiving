@@ -1,3 +1,5 @@
+using System;
+
 namespace DeviceArchiving.WindowsForm.Dtos
 {
     public class ExcelDevice
@@ -15,6 +17,7 @@ namespace DeviceArchiving.WindowsForm.Dtos
         public string Card { get; set; }
         public string Comment { get; set; }
         public string ContactNumber { get; set; }
+        public DateTime CreatedAt { get; set; }
         public bool IsSelected { get; set; }
         public bool IsDuplicateSerial { get; set; }
         public bool IsDuplicateLaptopName { get; set; }

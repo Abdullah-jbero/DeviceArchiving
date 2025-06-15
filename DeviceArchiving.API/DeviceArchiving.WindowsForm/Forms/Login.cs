@@ -1,7 +1,10 @@
 ﻿using DeviceArchiving.Data.Dto.Users;
 using DeviceArchiving.Service;
+using DeviceArchiving.Service.AccountServices;
 using Guna.UI2.WinForms;
+using Microsoft.Extensions.Configuration;
 using System;
+using System.Configuration;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -10,6 +13,7 @@ namespace DeviceArchiving.WindowsForm.Forms
     public partial class LoginForm : Form
     {
         private readonly IAccountService _accountService;
+        private readonly IConfiguration _configuration;
 
         private Guna2TextBox txtUsername;
         private Guna2TextBox txtPassword;
@@ -19,14 +23,16 @@ namespace DeviceArchiving.WindowsForm.Forms
         public AuthenticationResponse AuthResponse { get; private set; }
         public int LoggedInUserId => AuthResponse?.Id ?? 0;
 
-        public LoginForm(IAccountService accountService)
+        public LoginForm(IAccountService accountService  , IConfiguration configuration)
         {
             _accountService = accountService;
+            _configuration = configuration;
 
             this.RightToLeft = RightToLeft.Yes;
             this.RightToLeftLayout = true;
-
+         
             SetupUI();
+
         }
 
         private void SetupUI()
@@ -79,7 +85,7 @@ namespace DeviceArchiving.WindowsForm.Forms
                 Location = new Point(150, 150),
                 Width = 100,
                 Height = 40,
-                FillColor = Color.FromArgb(45, 204, 112),
+                FillColor = Color.FromArgb(0, 122, 204),
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 BorderRadius = 8,
                 ForeColor = Color.White
@@ -127,7 +133,7 @@ namespace DeviceArchiving.WindowsForm.Forms
                 if (response.Success)
                 {
                     AppSession.CurrentUserId = response.Data.Id;
-                    MainForm mainForm = new MainForm(_accountService, response.Data);
+                    MainForm mainForm = new MainForm(_accountService, response.Data , _configuration);
                     mainForm.Show();
                     this.Hide();
                 }

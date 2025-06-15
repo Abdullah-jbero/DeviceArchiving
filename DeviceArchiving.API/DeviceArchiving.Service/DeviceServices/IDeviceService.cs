@@ -1,8 +1,8 @@
 ﻿using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Data.Dto.Devices;
-using DeviceArchiving.Data.Entities;
+using System.Threading.Tasks;
 
-namespace DeviceArchiving.Service;
+namespace DeviceArchiving.Service.DeviceServices;
 
 public interface IDeviceService
 {
@@ -15,6 +15,3 @@ public interface IDeviceService
     Task<BaseResponse<DuplicateCheckResponse>> CheckDuplicatesAsync(List<CheckDuplicateDto> items);
     Task<BaseResponse<int>> ProcessDevicesAsync(List<DeviceUploadDto> dtos);
 }
-
-
-

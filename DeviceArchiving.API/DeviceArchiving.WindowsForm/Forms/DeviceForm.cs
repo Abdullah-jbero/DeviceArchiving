@@ -1,5 +1,5 @@
 ﻿using DeviceArchiving.Data.Dto.Devices;
-using DeviceArchiving.Service;
+using DeviceArchiving.Service.DeviceServices;
 using Guna.UI2.WinForms;
 using System;
 using System.Drawing;
@@ -39,7 +39,9 @@ namespace DeviceArchiving.WindowsForm.Forms
                     AutoSize = true,
                     ForeColor = Color.Black,
                     BackColor = Color.Transparent,
-                    Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point)
+                    TabStop = false,
+                    Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point),
+                    RightToLeft = RightToLeft.Yes 
                 };
             }
 
@@ -58,25 +60,25 @@ namespace DeviceArchiving.WindowsForm.Forms
             }
 
             // Create controls
-            var lblSource = CreateLabel("المصدر", new Point(50, 30));
+            var lblSource = CreateLabel("الجهة", new Point(50, 30));
             var txtSource = CreateTextBox("txtSource", new Point(150, 25));
 
-            var lblBrotherName = CreateLabel("اسم الأخ", new Point(50, 70));
+            var lblBrotherName = CreateLabel("الأخ اسم", new Point(50, 70));
             var txtBrotherName = CreateTextBox("txtBrotherName", new Point(150, 65));
 
             var lblLaptopName = CreateLabel("اسم اللاب توب", new Point(50, 110));
             var txtLaptopName = CreateTextBox("txtLaptopName", new Point(150, 105));
 
-            var lblSystemPassword = CreateLabel("كلمة مرور النظام", new Point(50, 150));
+            var lblSystemPassword = CreateLabel("النظام مرور كلمة", new Point(50, 150));
             var txtSystemPassword = CreateTextBox("txtSystemPassword", new Point(150, 145));
 
-            var lblWindowsPassword = CreateLabel("كلمة مرور ويندوز", new Point(50, 190));
+            var lblWindowsPassword = CreateLabel("النظام مرور كلمة", new Point(50, 190));
             var txtWindowsPassword = CreateTextBox("txtWindowsPassword", new Point(150, 185));
 
-            var lblHardDrivePassword = CreateLabel("كلمة قرص الصلب", new Point(50, 230));
+            var lblHardDrivePassword = CreateLabel("الصلب مرور كلمة", new Point(50, 230));
             var txtHardDrivePassword = CreateTextBox("txtHardDrivePassword", new Point(150, 225));
 
-            var lblFreezePassword = CreateLabel("كلمة مرور التجميد", new Point(50, 270));
+            var lblFreezePassword = CreateLabel("التجميد مرور كلمة", new Point(50, 270));
             var txtFreezePassword = CreateTextBox("txtFreezePassword", new Point(150, 265));
 
             var lblCode = CreateLabel("الكود", new Point(50, 310));
@@ -85,17 +87,18 @@ namespace DeviceArchiving.WindowsForm.Forms
             var lblType = CreateLabel("النوع", new Point(50, 350));
             var txtType = CreateTextBox("txtType", new Point(150, 345));
 
-            var lblSerialNumber = CreateLabel("رقم التسلسل", new Point(50, 390));
+            var lblSerialNumber = CreateLabel("التسلسل رقم", new Point(50, 390));
             var txtSerialNumber = CreateTextBox("txtSerialNumber", new Point(150, 385));
 
-            var lblComment = CreateLabel("التعليق", new Point(50, 430));
-            var txtComment = CreateTextBox("txtComment", new Point(150, 425));
+            var lblContactNumber = CreateLabel("التواصل رقم", new Point(50, 430));
+            var txtContactNumber = CreateTextBox("txtContactNumber", new Point(150, 425));
 
-            var lblContactNumber = CreateLabel("رقم التواصل", new Point(50, 470));
-            var txtContactNumber = CreateTextBox("txtContactNumber", new Point(150, 465));
+            var lblCard = CreateLabel("الشاشة الكرت", new Point(50, 470));
+            var txtCard = CreateTextBox("txtCard", new Point(150, 465));
 
-            var lblCard = CreateLabel("البطاقة", new Point(50, 510));
-            var txtCard = CreateTextBox("txtCard", new Point(150, 505));
+
+            var lblComment = CreateLabel("ملاحظات", new Point(50, 510));
+            var txtComment = CreateTextBox("txtComment", new Point(150, 505));
 
             var btnSave = new Guna2Button
             {

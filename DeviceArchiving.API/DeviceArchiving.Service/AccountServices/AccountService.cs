@@ -9,7 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace DeviceArchiving.Service;
+namespace DeviceArchiving.Service.AccountServices;
 public class AccountService : IAccountService
 {
     private readonly IDbContextFactory<DeviceArchivingContext> _contextFactory;

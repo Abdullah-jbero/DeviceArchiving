@@ -3,7 +3,7 @@ using ClosedXML.Excel;
 using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Data.Entities;
-using DeviceArchiving.Service;
+using DeviceArchiving.Service.DeviceServices;
 using DocumentFormat.OpenXml.InkML;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;

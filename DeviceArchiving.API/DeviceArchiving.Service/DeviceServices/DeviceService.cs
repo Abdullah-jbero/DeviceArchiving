@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DeviceArchiving.Service;
+namespace DeviceArchiving.Service.DeviceServices;
 
 public class DeviceService : IDeviceService
 {

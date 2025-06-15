@@ -1,7 +1,7 @@
 ﻿using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Data.Entities;
 
-namespace DeviceArchiving.Service;
+namespace DeviceArchiving.Service.OperationServices;
 
 public interface IOperationService
 {
