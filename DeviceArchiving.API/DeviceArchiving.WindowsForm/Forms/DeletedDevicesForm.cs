@@ -57,7 +57,7 @@ public partial class DeletedDevicesForm : Form
             ReadOnly = true,
             BackgroundColor = Color.White,
             BorderStyle = BorderStyle.None,
-            CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
+            CellBorderStyle = DataGridViewCellBorderStyle.SingleVertical, // إضافة حدود عمودية
             ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None,
             EnableHeadersVisualStyles = false,
             ColumnHeadersHeight = 40,
@@ -65,7 +65,8 @@ public partial class DeletedDevicesForm : Form
             {
                 BackColor = Color.FromArgb(26, 115, 232),
                 ForeColor = Color.White,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Alignment = DataGridViewContentAlignment.MiddleCenter // محاذاة النص في المنتصف
             },
             DefaultCellStyle = new DataGridViewCellStyle
             {
@@ -74,7 +75,6 @@ public partial class DeletedDevicesForm : Form
                 SelectionForeColor = Color.Black
             }
         };
-
         this.Controls.AddRange(new Control[] { lblHeader, dataGridViewDeletedDevices });
 
         // Resize event handler
@@ -98,30 +98,49 @@ public partial class DeletedDevicesForm : Form
         }
     }
 
+
+
     private void UpdateDeletedDevicesGrid()
     {
-        var dataGridViewDeletedDevices = this.Controls["dataGridViewDeletedDevices"] as Guna2DataGridView;
-        if (dataGridViewDeletedDevices == null) return;
+        var dgv = Controls.Find("dataGridViewDeletedDevices", true).FirstOrDefault() as Guna2DataGridView;
+        if (dgv == null) return;
 
-        dataGridViewDeletedDevices.Columns.Clear();
+        dgv.DataSource = null;
+        dgv.DataSource = _deletedDevices;
+        dgv.ScrollBars = ScrollBars.Both;
 
-        dataGridViewDeletedDevices.Columns.Add(new DataGridViewTextBoxColumn
+        var columnsRename = new Dictionary<string, string>
         {
-            HeaderText = "اسم اللاب توب",
-            DataPropertyName = "LaptopName"
-        });
-        dataGridViewDeletedDevices.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            HeaderText = "الرقم التسلسلي",
-            DataPropertyName = "SerialNumber"
-        });
-        dataGridViewDeletedDevices.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            HeaderText = "النوع",
-            DataPropertyName = "Type"
-        });
+            {"Id", "م"},
+            {"Source", "الجهة"},
+            {"BrotherName", "اسم الأخ"},
+            {"LaptopName", "اسم اللاب توب"},
+            {"SystemPassword", "كلمة مرور النظام"},
+            {"WindowsPassword", "كلمة مرور ويندوز"},
+            {"HardDrivePassword", "كلمة التشفير"},
+            {"FreezePassword", "كلمة التجميد"},
+            {"Code", "الكود"},
+            {"Type", "النوع"},
+            {"SerialNumber", "الرقم التسلسلي"},
+            {"Card", "الكرت"},
+            {"Comment", "ملاحظات"},
+            {"ContactNumber", "رقم التواصل"},
+            {"UserName", "تم بواسطة"},
+            {"CreatedAt", "تاريخ الإنشاء"}
+        };
 
-        dataGridViewDeletedDevices.DataSource = null;
-        dataGridViewDeletedDevices.DataSource = _deletedDevices;
+        foreach (DataGridViewColumn column in dgv.Columns)
+        {
+            if (columnsRename.ContainsKey(column.Name))
+            {
+                column.HeaderText = columnsRename[column.Name];
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells; 
+            }
+            else
+            {
+                column.Visible = false;
+            }
+        }
+
     }
 }
