@@ -2,6 +2,7 @@
 using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Data.Entities;
+using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -128,9 +129,56 @@ public class DeviceService : IDeviceService
 
     public async Task<BaseResponse<int>> ProcessDevicesAsync(List<DeviceUploadDto> dtos)
     {
+        if (dtos == null || !dtos.Any())
+            return BaseResponse<int>.Failure("لا توجد أجهزة للمعالجة");
 
-        throw new NotImplementedException();
+        var userId = AppSession.CurrentUserId;
+        if (userId == 0)
+            return BaseResponse<int>.Failure("معرف المستخدم غير صالح");
 
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        int processedCount = 0;
+        const int batchSize = 100;
+
+        // Check for duplicates first
+        var checkDuplicates = await CheckDuplicatesInDatabaseAsync(dtos.Select(d => new CheckDuplicateDto
+        {
+            SerialNumber = d.SerialNumber,
+            LaptopName = d.LaptopName
+        }).ToList());
+
+        if (checkDuplicates.Data.DuplicateSerialNumbers.Any() || checkDuplicates.Data.DuplicateLaptopNames.Any())
+            return BaseResponse<int>.Failure("تم العثور على أرقام تسلسلية أو أسماء لاب توب مكررة");
+
+        // Process in batches
+        foreach (var batch in dtos.Chunk(batchSize))
+        {
+            var devices = batch.Select(dto => new Device
+            {
+                Source = dto.Source,
+                BrotherName = dto.BrotherName,
+                LaptopName = dto.LaptopName,
+                SystemPassword = dto.SystemPassword,
+                WindowsPassword = dto.WindowsPassword,
+                HardDrivePassword = dto.HardDrivePassword,
+                FreezePassword = dto.FreezePassword,
+                Code = dto.Code,
+                Type = dto.Type,
+                SerialNumber = dto.SerialNumber,
+                Card = dto.Card,
+                Comment = dto.Comment,
+                ContactNumber = dto.ContactNumber,
+                IsActive = true,
+                CreatedAt = dto.CreatedAt,
+                UserId = userId
+            }).ToList();
+
+            context.Devices.AddRange(devices);
+            await context.SaveChangesAsync();
+            processedCount += devices.Count;
+        }
+
+        return BaseResponse<int>.SuccessResult(processedCount, $"تم معالجة {processedCount} جهاز بنجاح");
     }
 
     public async Task<List<GetAllDevicesDto>> GetAllDevicesAsync()
@@ -251,13 +299,70 @@ public class DeviceService : IDeviceService
         }
     }
 
-    public Task<GetDeviceDto?> GetInactiveDeviceBySerialOrLaptopAsync(string? serialNumber, string? laptopName)
+    public async Task<GetDeviceDto?> GetInactiveDeviceBySerialOrLaptopAsync(string? serialNumber, string? laptopName)
     {
-        throw new NotImplementedException();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var device = await context.Devices
+            .Include(d => d.User)
+            .FirstOrDefaultAsync(d => !d.IsActive &&
+                ((serialNumber != null && d.SerialNumber == serialNumber) ||
+                 (laptopName != null && d.LaptopName == laptopName)));
+
+        if (device == null)
+            return null;
+
+        return new GetDeviceDto
+        {
+            Id = device.Id,
+            Source = device.Source,
+            BrotherName = device.BrotherName,
+            LaptopName = device.LaptopName,
+            SystemPassword = device.SystemPassword,
+            WindowsPassword = device.WindowsPassword,
+            HardDrivePassword = device.HardDrivePassword,
+            FreezePassword = device.FreezePassword,
+            Code = device.Code,
+            Type = device.Type,
+            SerialNumber = device.SerialNumber,
+            Card = device.Card,
+            Comment = device.Comment,
+            ContactNumber = device.ContactNumber,
+            UserName = device.User?.UserName,
+            IsActive = device.IsActive
+        };
     }
 
-    public Task<BaseResponse<string>> RestoreDeviceAsync(int id)
+    public async Task<BaseResponse<string>> RestoreDeviceAsync(int id)
     {
-        throw new NotImplementedException();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var device = await context.Devices
+            .Include(d => d.Operations)
+            .Include(d => d.User)
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (device == null)
+            return BaseResponse<string>.Failure("الجهاز غير موجود");
+
+        if (device.IsActive)
+            return BaseResponse<string>.Failure("الجهاز نشط بالفعل");
+
+
+
+        // Restore device
+        device.IsActive = true;
+        device.UpdatedAt = DateTime.Now;
+
+        // Log restore operation
+        device.Operations.Add(new Operation
+        {
+            DeviceId = id,
+            OperationName = "تمت استعادة الجهاز",
+            CreatedAt = DateTime.Now,
+        });
+
+        context.Devices.Update(device);
+        await context.SaveChangesAsync();
+
+        return BaseResponse<string>.SuccessResult("تم استعادة الجهاز بنجاح");
     }
 }

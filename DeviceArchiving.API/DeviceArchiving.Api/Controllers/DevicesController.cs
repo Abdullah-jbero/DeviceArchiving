@@ -5,6 +5,7 @@ using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Data.Entities;
 using DeviceArchiving.Service.DeviceServices;
 using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -100,9 +101,20 @@ public class DevicesController : ControllerBase
         if (items == null || !items.Any())
             return BadRequest(BaseResponse<DuplicateCheckResponse>.Failure("·„ Ì „ ≈—”«· »Ì«‰«  ·· Õﬁﬁ"));
 
-        var response = await _deviceService.CheckDuplicatesAsync(items);
+        var response = await _deviceService.CheckDuplicatesInDatabaseAsync(items);
         return Ok(response);
     }
+
+    [HttpPost("restore-device")]
+    [ProducesResponseType(typeof(BaseResponse<DuplicateCheckResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<DuplicateCheckResponse>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RestoreDevice(int id)
+    {
+
+        var response = await _deviceService.RestoreDeviceAsync(id);
+        return Ok(response);
+    }
+
 
 
 }
