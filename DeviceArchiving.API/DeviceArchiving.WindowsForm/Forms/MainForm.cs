@@ -21,6 +21,7 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
+using DeviceArchiving.Service;
 
 namespace DeviceArchiving.WindowsForm.Forms;
 
@@ -31,6 +32,7 @@ public partial class MainForm : Form
     private readonly IOperationTypeService _operationTypeService;
     private readonly IAccountService _accountService;
     private readonly IConfiguration _configuration;
+    private readonly ExcelReader _excelReader;
     private readonly AuthenticationResponse _user;
     private List<GetAllDevicesDto> _devices = new List<GetAllDevicesDto>();
     private List<GetAllDevicesDto> _filteredDevices = new List<GetAllDevicesDto>();
@@ -47,7 +49,7 @@ public partial class MainForm : Form
         _accountService = accountService;
         _configuration = configuration;
         _user = user;
-
+        _excelReader = new ExcelReader(_configuration);
         _deviceService = Program.Services.GetService<IDeviceService>();
         _operationService = Program.Services.GetService<IOperationService>();
         _operationTypeService = Program.Services.GetService<IOperationTypeService>();
@@ -324,7 +326,7 @@ public partial class MainForm : Form
             BorderRadius = 8,
             FillColor = buttonColor,
             ForeColor = Color.White,
-            Visible = Properties.Settings.Default.CanUploadExcel == true,
+            //Visible = Properties.Settings.Default.CanUploadExcel == true,
             TabIndex = 8
         };
 
@@ -633,42 +635,44 @@ public partial class MainForm : Form
     {
         try
         {
-            using (var workbook = new XLWorkbook())
-            {
-                var worksheet = workbook.Worksheets.Add("«·√ÃÂ“…");
-                var headers = new[] { "«·ÃÂ…", "«”„ «·√Œ", "«”„ «··«»  Ê»", "ﬂ·„… „—Ê— «·‰Ÿ«„", "ﬂ·„… „—Ê— ÊÌ‰œÊ“", "ﬂ·„… «· ‘›Ì—", "ﬂ·„… «· Ã„Ìœ", "«·ﬂÊœ", "«·‰Ê⁄", "«·—ﬁ„ «· ”·”·Ì", "«·ﬂ— ", "„·«ÕŸ…", "—ﬁ„ «· Ê«’·", " „ »Ê«”ÿ…", " «—ÌŒ «·≈‰‘«¡" };
-                for (int i = 0; i < headers.Length; i++)
-                    worksheet.Cell(1, i + 1).Value = headers[i];
+   
 
-                for (int i = 0; i < _filteredDevices.Count; i++)
+                using (var workbook = new XLWorkbook())
                 {
-                    var device = _filteredDevices[i];
-                    worksheet.Cell(i + 2, 1).Value = device.Source;
-                    worksheet.Cell(i + 2, 2).Value = device.BrotherName;
-                    worksheet.Cell(i + 2, 3).Value = device.LaptopName;
-                    worksheet.Cell(i + 2, 4).Value = device.SystemPassword;
-                    worksheet.Cell(i + 2, 5).Value = device.WindowsPassword;
-                    worksheet.Cell(i + 2, 6).Value = device.HardDrivePassword;
-                    worksheet.Cell(i + 2, 7).Value = device.FreezePassword;
-                    worksheet.Cell(i + 2, 8).Value = device.Code;
-                    worksheet.Cell(i + 2, 9).Value = device.Type;
-                    worksheet.Cell(i + 2, 10).Value = device.SerialNumber;
-                    worksheet.Cell(i + 2, 11).Value = device.Card;
-                    worksheet.Cell(i + 2, 12).Value = device.Comment;
-                    worksheet.Cell(i + 2, 13).Value = device.ContactNumber;
-                    worksheet.Cell(i + 2, 14).Value = device.UserName;
-                    worksheet.Cell(i + 2, 15).Value = device.CreatedAt.ToString("g");
-                }
+                    var worksheet = workbook.Worksheets.Add("«·√ÃÂ“…");
+                    var headers = new[] { "«·ÃÂ…", "«”„ «·√Œ", "«”„ «··«»  Ê»", "ﬂ·„… „—Ê— «·‰Ÿ«„", "ﬂ·„… „—Ê— ÊÌ‰œÊ“", "ﬂ·„… «· ‘›Ì—", "ﬂ·„… «· Ã„Ìœ", "«·ﬂÊœ", "«·‰Ê⁄", "«·—ﬁ„ «· ”·”·Ì", "«·ﬂ— ", "„·«ÕŸ…", "—ﬁ„ «· Ê«’·", " „ »Ê«”ÿ…", " «—ÌŒ «·≈‰‘«¡" };
+                    for (int i = 0; i < headers.Length; i++)
+                        worksheet.Cell(1, i + 1).Value = headers[i];
 
-                using (var saveFileDialog = new SaveFileDialog { Filter = "Excel files (*.xlsx)|*.xlsx", FileName = "devices.xlsx" })
-                {
-                    if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                    for (int i = 0; i < _filteredDevices.Count; i++)
                     {
-                        workbook.SaveAs(saveFileDialog.FileName);
-                        MessageBox.Show(" „  ’œÌ— «·»Ì«‰«  »‰Ã«Õ.", "‰Ã«Õ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        var device = _filteredDevices[i];
+                        worksheet.Cell(i + 2, 1).Value = device.Source;
+                        worksheet.Cell(i + 2, 2).Value = device.BrotherName;
+                        worksheet.Cell(i + 2, 3).Value = device.LaptopName;
+                        worksheet.Cell(i + 2, 4).Value = device.SystemPassword;
+                        worksheet.Cell(i + 2, 5).Value = device.WindowsPassword;
+                        worksheet.Cell(i + 2, 6).Value = device.HardDrivePassword;
+                        worksheet.Cell(i + 2, 7).Value = device.FreezePassword;
+                        worksheet.Cell(i + 2, 8).Value = device.Code;
+                        worksheet.Cell(i + 2, 9).Value = device.Type;
+                        worksheet.Cell(i + 2, 10).Value = device.SerialNumber;
+                        worksheet.Cell(i + 2, 11).Value = device.Card;
+                        worksheet.Cell(i + 2, 12).Value = device.Comment;
+                        worksheet.Cell(i + 2, 13).Value = device.ContactNumber;
+                        worksheet.Cell(i + 2, 14).Value = device.UserName;
+                        worksheet.Cell(i + 2, 15).Value = device.CreatedAt.ToString("g");
+                    }
+
+                    using (var saveFileDialog = new SaveFileDialog { Filter = "Excel files (*.xlsx)|*.xlsx", FileName = "devices.xlsx" })
+                    {
+                        if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                        {
+                            workbook.SaveAs(saveFileDialog.FileName);
+                            MessageBox.Show(" „  ’œÌ— «·»Ì«‰«  »‰Ã«Õ.", "‰Ã«Õ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
                 }
-            }
         }
         catch (Exception ex)
         {
@@ -678,218 +682,60 @@ public partial class MainForm : Form
 
     private async void BtnImportExcel_Click(object sender, EventArgs e)
     {
-        if (Properties.Settings.Default.CanUploadExcel == false)
+        using (var passwordForm = new PasswordPromptForm("√œŒ· ﬂ·„… «·”— · ’œÌ— «·»Ì«‰« "))
         {
-            MessageBox.Show(" „ —›⁄ „·› Excel „”»ﬁ«. ·« Ì„ﬂ‰ —›⁄ „·› ¬Œ—.", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
-        using (var openFileDialog = new OpenFileDialog { Filter = "Excel files (*.xlsx;*.xls)|*.xlsx;*.xls" })
-        {
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    _isLoading = true;
-                    _excelData = ReadExcelFile(openFileDialog.FileName);
-                    if (_excelData.Count == 0) return;
+            if (passwordForm.ShowDialog() != DialogResult.OK)
+                return;
 
-                    if (!CheckDuplicatesInFile(_excelData))
+            // «” »œ· "admin123" »ﬂ·„… «·”— «·›⁄·Ì… √Ê ﬁ„ »«· Õﬁﬁ „‰ ﬁ«⁄œ… »Ì«‰« /≈⁄œ«œ« 
+            if (passwordForm.EnteredPassword != AppSession.Password)
+            {
+                MessageBox.Show("ﬂ·„… «·”— €Ì— ’ÕÌÕ…", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            using (var openFileDialog = new OpenFileDialog { Filter = "Excel files (*.xlsx;*.xls)|*.xlsx;*.xls" })
+            {
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
                     {
-                        _excelData.Clear();
-                        return;
+                        _isLoading = true;
+                        _excelData = _excelReader.ReadExcelFile(openFileDialog.FileName);
+                        if (_excelData.Count == 0) return;
+
+                        if (!_excelReader.CheckDuplicatesInFile(_excelData))
+                        {
+                            _excelData.Clear();
+                            return;
+                        }
+
+
+
+                        if (!await CheckDuplicatesInDatabaseAsync(_excelData))
+                        {
+                            _excelData.Clear();
+                            return;
+                        }
+
+                        ShowExcelPreviewDialog();
+                        LoadDevices();
                     }
-
-
-
-                    if (!await CheckDuplicatesInDatabaseAsync(_excelData))
+                    catch (Exception ex)
                     {
-                        _excelData.Clear();
-                        return;
+                        MessageBox.Show($"Œÿ√ √À‰«¡ ﬁ—«¡… «·„·›: {ex.Message}", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
-
-                    ShowExcelPreviewDialog();
-                    LoadDevices();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Œÿ√ √À‰«¡ ﬁ—«¡… «·„·›: {ex.Message}", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    _isLoading = false;
+                    finally
+                    {
+                        _isLoading = false;
+                    }
                 }
             }
         }
+
     }
 
-    private List<ExcelDevice> ReadExcelFile(string filePath)
-    {
-        if (!File.Exists(filePath))
-        {
-            MessageBox.Show("«·„·› €Ì— „ÊÃÊœ.", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return new List<ExcelDevice>();
-        }
 
-        string[] allowedFormats = _configuration.GetSection("DateSettings:AllowedFormats").Get<string[]>();
-        string datePattern = _configuration.GetSection("DateSettings:DatePattern").Get<string>();
-        var devices = new List<ExcelDevice>();
-        var errorMessages = new List<string>();
-
-        using (var workbook = new XLWorkbook(filePath))
-        {
-            var worksheet = workbook.Worksheet(1);
-            var headers = new[] { "«·—ﬁ„", "«·ÃÂ…", "«”„ «·√Œ", "«”„ «··«» Ê»", "ﬂ·„… ”— «·‰Ÿ«„", "ﬂ·„… ”— «·ÊÌ‰œÊ“", "ﬂ·„… ”— «·Â«—œ", "ﬂ·„… «· Ã„Ìœ", "«·ﬂÊœ", "«·‰Ê⁄", "—ﬁ„ «·”Ì—Ì«·", "«·ﬂ— ", "„·«ÕŸ« ", "«· «—ÌŒ", "—ﬁ„ «· Ê«’·" };
-
-            // Validate headers
-            for (int i = 0; i < headers.Length; i++)
-            {
-                if (worksheet.Cell(1, i + 1).GetString() != headers[i])
-                {
-                    MessageBox.Show($"—√” «·ÃœÊ· €Ì— ’ÕÌÕ. Ì—ÃÏ «” Œœ«„ «·ﬁ«·» «·’ÕÌÕ: {string.Join(", ", headers)}", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return new List<ExcelDevice>();
-                }
-            }
-
-
-
-            var rows = worksheet.RowsUsed().Skip(1);
-            foreach (var row in rows)
-            {
-                string dateString = row.Cell(14).GetString().Trim().Split(' ')[0];
-                if (string.IsNullOrWhiteSpace(dateString))
-                {
-                    errorMessages.Add($"⁄„Êœ «· «—ÌŒ ›Ì «·’› {row.RowNumber()} ›«—€. Ì—ÃÏ ≈œŒ«·  «—ÌŒ »«·’Ì€… {string.Join(" √Ê ", allowedFormats)}.");
-                    continue;
-                }
-
-                if (!Regex.IsMatch(dateString, datePattern) ||
-                    !DateTime.TryParseExact(dateString, allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
-                {
-                    errorMessages.Add($"’Ì€… «· «—ÌŒ ›Ì «·’› {row.RowNumber()} €Ì— ’ÕÌÕ… √Ê «· «—ÌŒ €Ì— ’«·Õ. ÌÃ» √‰  ﬂÊ‰ {string.Join(" √Ê ", allowedFormats)}.");
-                    continue;
-                }
-
-                // Set time to 12:00:00 AM (midnight)
-                var createdAt = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, 0, 0, 0);
-
-                var device = new ExcelDevice
-                {
-                    Source = row.Cell(2).GetString().Trim(),
-                    BrotherName = row.Cell(3).GetString().Trim(),
-                    LaptopName = row.Cell(4).GetString().Trim(),
-                    SystemPassword = row.Cell(5).GetString().Trim(),
-                    WindowsPassword = row.Cell(6).GetString().Trim(),
-                    HardDrivePassword = row.Cell(7).GetString().Trim(),
-                    FreezePassword = row.Cell(8).GetString().Trim(),
-                    Code = row.Cell(9).GetString().Trim(),
-                    Type = row.Cell(10).GetString().Trim(),
-                    SerialNumber = row.Cell(11).GetString().Trim(),
-                    Card = row.Cell(12).GetString().Trim(),
-                    Comment = row.Cell(13).GetString().Trim() != "" ? row.Cell(13).GetString().Trim() : null,
-                    ContactNumber = row.Cell(15).GetString().Trim(),
-                    CreatedAt = createdAt,
-                    IsSelected = true,
-                    IsDuplicateSerial = false,
-                    IsDuplicateLaptopName = false
-                };
-
-                devices.Add(device);
-            }
-        }
-
-        if (devices.Count == 0 && errorMessages.Any())
-        {
-            MessageBox.Show(string.Join("\n", errorMessages), " Õ–Ì—", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
-        else if (errorMessages.Any())
-        {
-            MessageBox.Show(
-                "Â‰«ﬂ √Œÿ«¡ ›Ì «·’›Ê› «· «·Ì…:\n" + string.Join("\n", errorMessages),
-                caption:" Õ–Ì—",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            );
-            return new List<ExcelDevice>();
-        }
-        else if (devices.Count == 0)
-        {
-            MessageBox.Show("·„ Ì „ «·⁄ÀÊ— ⁄·Ï »Ì«‰«  ’«·Õ… ›Ì «·„·›.", " Õ–Ì—", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
-
-        return devices;
-    }
-
-    private bool CheckDuplicatesInFile(List<ExcelDevice> devices)
-    {
-        var serialNumbers = new HashSet<string>();
-        var laptopNames = new HashSet<string>();
-        var duplicateSerials = new HashSet<string>();
-        var duplicateLaptopNames = new HashSet<string>();
-        var columnErrors = new List<(int Row, List<string> Fields)>();
-
-        for (int i = 0; i < devices.Count; i++)
-        {
-            var device = devices[i];
-            var rowErrors = new List<string>();
-            var rowNumber = i + 2; // Header row + 1-based indexing
-
-            var requiredFields = new (string Field, string Label)[]
-            {
-                (device.Source, "«·ÃÂ…"),
-                (device.BrotherName, "«”„ «·√Œ"),
-                (device.LaptopName, "«”„ «··«» Ê»"),
-                (device.SystemPassword, "ﬂ·„… ”— «·‰Ÿ«„"),
-                (device.WindowsPassword, "ﬂ·„… ”— «·ÊÌ‰œÊ“"),
-                (device.HardDrivePassword, "ﬂ·„… ”— «·Â«—œ"),
-                (device.FreezePassword, "ﬂ·„… «· Ã„Ìœ"),
-                (device.Code, "«·ﬂÊœ"),
-                (device.Type, "«·‰Ê⁄"),
-                (device.SerialNumber, "—ﬁ„ «·”Ì—Ì«·"),
-                (device.Card, "«·ﬂ— ")
-            };
-
-            foreach (var (field, label) in requiredFields)
-            {
-                if (string.IsNullOrWhiteSpace(field))
-                    rowErrors.Add(label);
-            }
-
-            if (!string.IsNullOrEmpty(device.SerialNumber))
-            {
-                if (serialNumbers.Contains(device.SerialNumber))
-                    duplicateSerials.Add(device.SerialNumber);
-                else
-                    serialNumbers.Add(device.SerialNumber);
-            }
-
-            if (!string.IsNullOrEmpty(device.LaptopName))
-            {
-                if (laptopNames.Contains(device.LaptopName))
-                    duplicateLaptopNames.Add(device.LaptopName);
-                else
-                    laptopNames.Add(device.LaptopName);
-            }
-
-            if (rowErrors.Count > 0)
-                columnErrors.Add((rowNumber, rowErrors));
-        }
-
-        var errorMessages = new List<string>();
-        if (columnErrors.Any())
-            errorMessages.Add($"ÕﬁÊ· „ÿ·Ê»… ›«—€…: {string.Join("∫ ", columnErrors.Select(e => $"«·’› {e.Row}: {string.Join("° ", e.Fields)}"))}");
-        if (duplicateSerials.Any())
-            errorMessages.Add($"√—ﬁ«„ ”Ì—Ì«· „ﬂ——…: {string.Join(", ", duplicateSerials)}");
-        if (duplicateLaptopNames.Any())
-            errorMessages.Add($"√”„«¡ ·«» Ê» „ﬂ——…: {string.Join(", ", duplicateLaptopNames)}");
-
-        if (errorMessages.Any())
-        {
-            MessageBox.Show($"«·„·› ÌÕ ÊÌ ⁄·Ï √Œÿ«¡: {string.Join("° ", errorMessages)}\n √ﬂœ „‰ √‰ Ã„Ì⁄ «·ÕﬁÊ· «·„ÿ·Ê»… „„·Ê¡… Ê√‰ √—ﬁ«„ «·”Ì—Ì«· Ê√”„«¡ «··«» Ê» ›—Ìœ….", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
-        }
-
-        return true;
-    }
 
     private async Task<bool> CheckDuplicatesInDatabaseAsync(List<ExcelDevice> devices)
     {
@@ -993,3 +839,4 @@ public partial class MainForm : Form
         }
     }
 }
+

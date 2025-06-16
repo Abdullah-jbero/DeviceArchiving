@@ -150,10 +150,23 @@ namespace DeviceArchiving.WindowsForm.Forms
 
         private void BtnSignup_Click(object sender, EventArgs e)
         {
-            SignupForm signupForm = new SignupForm(_accountService);
-            if (signupForm.ShowDialog() == DialogResult.OK)
+            using (var passwordForm = new PasswordPromptForm("أدخل كلمة السر لإنشاء حساب جديد:"))
             {
-                MessageBox.Show("تم إنشاء الحساب بنجاح، يرجى تسجيل الدخول.", "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (passwordForm.ShowDialog() != DialogResult.OK)
+                    return;
+
+                if (passwordForm.EnteredPassword != AppSession.Password)
+                {
+                    MessageBox.Show("كلمة السر غير صحيحة", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                Guna2TextBox txtUsername = this.Controls["txtUsername"] as Guna2TextBox;
+                Guna2TextBox txtPassword = this.Controls["txtPassword"] as Guna2TextBox;
+                SignupForm signupForm = new SignupForm(_accountService);
+                if (signupForm.ShowDialog() == DialogResult.OK)
+                {
+                    MessageBox.Show("تم إنشاء الحساب بنجاح، يرجى تسجيل الدخول.", "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
         }
     }
