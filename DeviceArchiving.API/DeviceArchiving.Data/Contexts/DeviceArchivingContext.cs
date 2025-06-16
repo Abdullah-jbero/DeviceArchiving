@@ -24,10 +24,10 @@ public class DeviceArchivingContext : DbContext
 
         modelBuilder.Entity<User>().HasIndex(u => u.UserName).IsUnique();
 
-        modelBuilder.Entity<Device>()
-            .HasQueryFilter(d => d.IsActive == true);
+        modelBuilder.Entity<Device>().HasQueryFilter(d => d.IsActive == true);
 
         modelBuilder.Entity<Device>().HasIndex(u => u.SerialNumber).IsUnique();
+        modelBuilder.Entity<Device>().HasIndex(u => u.LaptopName).IsUnique();
     }
 }
 

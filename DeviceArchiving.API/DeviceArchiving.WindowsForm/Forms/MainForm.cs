@@ -18,6 +18,9 @@ using DeviceArchiving.Service.OperationTypeServices;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using System.Configuration;
+using System.Globalization;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace DeviceArchiving.WindowsForm.Forms;
 
@@ -289,6 +292,7 @@ public partial class MainForm : Form
             ForeColor = Color.White,
             TabIndex = 5
         };
+
         var btnShowDeletedDevices = new Guna2Button
         {
             Text = "«·√ÃÂ“… «·„Õ–Ê›…",
@@ -370,7 +374,7 @@ public partial class MainForm : Form
             ReadOnly = true,
             BackgroundColor = Color.White,
             BorderStyle = BorderStyle.None,
-            CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
+            CellBorderStyle = DataGridViewCellBorderStyle.SunkenVertical,
             ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None,
             EnableHeadersVisualStyles = false,
             ColumnHeadersHeight = 40,
@@ -378,7 +382,9 @@ public partial class MainForm : Form
             {
                 BackColor = Color.FromArgb(26, 115, 232),
                 ForeColor = Color.White,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Alignment = DataGridViewContentAlignment.MiddleCenter // „Õ«–«… «·‰’ ›Ì «·„‰ ’›
+
             },
             DefaultCellStyle = new DataGridViewCellStyle
             {
@@ -434,7 +440,7 @@ public partial class MainForm : Form
         try
         {
             _isLoading = true;
-            _devices = (await _deviceService.GetAllDevicesAsync()).Where(d => d.IsActive = true).ToList();
+            _devices = (await _deviceService.GetAllDevicesAsync()).Where(d => d.IsActive == true).ToList();
             _filteredDevices = _devices.ToList();
 
             UpdateDeviceTypesComboBox();
@@ -454,7 +460,9 @@ public partial class MainForm : Form
     {
         var deletedDevicesForm = new DeletedDevicesForm(_deviceService);
         deletedDevicesForm.ShowDialog();
+        LoadDevices();
     }
+
     private void UpdateDevicesGrid()
     {
         var dgv = Controls.Find("dataGridViewDevices", true).FirstOrDefault() as Guna2DataGridView;
@@ -462,8 +470,7 @@ public partial class MainForm : Form
 
         dgv.DataSource = null;
         dgv.DataSource = _filteredDevices;
-
-        // ≈⁄«œ…  ”„Ì… «·√⁄„œ… · ﬂÊ‰ ⁄—»Ì… ÊÊ«÷Õ…
+        dgv.ScrollBars = ScrollBars.Both;
         var columnsRename = new Dictionary<string, string>
         {
             {"Id", "„"},
@@ -484,11 +491,20 @@ public partial class MainForm : Form
             {"CreatedAt", " «—ÌŒ «·≈‰‘«¡"}
         };
 
-        foreach (var col in columnsRename)
+        foreach (DataGridViewColumn column in dgv.Columns)
         {
-            if (dgv.Columns[col.Key] != null)
-                dgv.Columns[col.Key].HeaderText = col.Value;
+            if (columnsRename.ContainsKey(column.Name))
+            {
+                column.HeaderText = columnsRename[column.Name];
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells; // ÷»ÿ «·⁄—÷ »‰«¡ ⁄·Ï «·„Õ ÊÏ
+            }
+            else
+            {
+                column.Visible = false;
+            }
         }
+
+        dgv.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
     }
 
     private void UpdateDeviceTypesComboBox()
@@ -562,6 +578,7 @@ public partial class MainForm : Form
             LoadDevices();
         }
     }
+
     private void BtnRefresh_Click(object sender, EventArgs e)
     {
         LoadDevices();
@@ -574,6 +591,7 @@ public partial class MainForm : Form
             form.ShowDialog();
         }
     }
+
     private void BtnEditDevice_Click(object sender, EventArgs e)
     {
         if (_selectedDevice == null)
@@ -658,7 +676,7 @@ public partial class MainForm : Form
         }
     }
 
-    private void BtnImportExcel_Click(object sender, EventArgs e)
+    private async void BtnImportExcel_Click(object sender, EventArgs e)
     {
         if (Properties.Settings.Default.CanUploadExcel == false)
         {
@@ -681,7 +699,16 @@ public partial class MainForm : Form
                         return;
                     }
 
-                    CheckDuplicatesInDatabase(_excelData);
+
+
+                    if (!await CheckDuplicatesInDatabaseAsync(_excelData))
+                    {
+                        _excelData.Clear();
+                        return;
+                    }
+
+                    ShowExcelPreviewDialog();
+                    LoadDevices();
                 }
                 catch (Exception ex)
                 {
@@ -695,45 +722,57 @@ public partial class MainForm : Form
         }
     }
 
-
     private List<ExcelDevice> ReadExcelFile(string filePath)
     {
- 
+        if (!File.Exists(filePath))
+        {
+            MessageBox.Show("«·„·› €Ì— „ÊÃÊœ.", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return new List<ExcelDevice>();
+        }
+
         string[] allowedFormats = _configuration.GetSection("DateSettings:AllowedFormats").Get<string[]>();
         string datePattern = _configuration.GetSection("DateSettings:DatePattern").Get<string>();
-
         var devices = new List<ExcelDevice>();
+        var errorMessages = new List<string>();
+
         using (var workbook = new XLWorkbook(filePath))
         {
             var worksheet = workbook.Worksheet(1);
             var headers = new[] { "«·—ﬁ„", "«·ÃÂ…", "«”„ «·√Œ", "«”„ «··«» Ê»", "ﬂ·„… ”— «·‰Ÿ«„", "ﬂ·„… ”— «·ÊÌ‰œÊ“", "ﬂ·„… ”— «·Â«—œ", "ﬂ·„… «· Ã„Ìœ", "«·ﬂÊœ", "«·‰Ê⁄", "—ﬁ„ «·”Ì—Ì«·", "«·ﬂ— ", "„·«ÕŸ« ", "«· «—ÌŒ", "—ﬁ„ «· Ê«’·" };
+
+            // Validate headers
             for (int i = 0; i < headers.Length; i++)
             {
                 if (worksheet.Cell(1, i + 1).GetString() != headers[i])
                 {
                     MessageBox.Show($"—√” «·ÃœÊ· €Ì— ’ÕÌÕ. Ì—ÃÏ «” Œœ«„ «·ﬁ«·» «·’ÕÌÕ: {string.Join(", ", headers)}", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return devices;
+                    return new List<ExcelDevice>();
                 }
             }
+
+
 
             var rows = worksheet.RowsUsed().Skip(1);
             foreach (var row in rows)
             {
-                string dateString = row.Cell(14).GetString().Trim();
-                DateTime createdAt;
-
+                string dateString = row.Cell(14).GetString().Trim().Split(' ')[0];
                 if (string.IsNullOrWhiteSpace(dateString))
                 {
-                    MessageBox.Show($"⁄„Êœ «· «—ÌŒ ›Ì «·’› {row.RowNumber()} ›«—€. Ì—ÃÏ ≈œŒ«·  «—ÌŒ »«·’Ì€… {string.Join(" √Ê ", allowedFormats)}.", "Œÿ√ ›Ì «· «—ÌŒ", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    new List<ExcelDevice>();
+                    errorMessages.Add($"⁄„Êœ «· «—ÌŒ ›Ì «·’› {row.RowNumber()} ›«—€. Ì—ÃÏ ≈œŒ«·  «—ÌŒ »«·’Ì€… {string.Join(" √Ê ", allowedFormats)}.");
+                    continue;
                 }
-                if (!Regex.IsMatch(dateString, datePattern) || !DateTime.TryParseExact(dateString, allowedFormats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out createdAt))
-                {
-                    MessageBox.Show($"’Ì€… «· «—ÌŒ ›Ì «·’› {row.RowNumber()} €Ì— ’ÕÌÕ… √Ê «· «—ÌŒ €Ì— ’«·Õ. ÌÃ» √‰  ﬂÊ‰ {string.Join(" √Ê ", allowedFormats)}. ", "Œÿ√ ›Ì «· «—ÌŒ", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return new List<ExcelDevice>();
 
+                if (!Regex.IsMatch(dateString, datePattern) ||
+                    !DateTime.TryParseExact(dateString, allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                {
+                    errorMessages.Add($"’Ì€… «· «—ÌŒ ›Ì «·’› {row.RowNumber()} €Ì— ’ÕÌÕ… √Ê «· «—ÌŒ €Ì— ’«·Õ. ÌÃ» √‰  ﬂÊ‰ {string.Join(" √Ê ", allowedFormats)}.");
+                    continue;
                 }
-                devices.Add(new ExcelDevice
+
+                // Set time to 12:00:00 AM (midnight)
+                var createdAt = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, 0, 0, 0);
+
+                var device = new ExcelDevice
                 {
                     Source = row.Cell(2).GetString().Trim(),
                     BrotherName = row.Cell(3).GetString().Trim(),
@@ -752,18 +791,33 @@ public partial class MainForm : Form
                     IsSelected = true,
                     IsDuplicateSerial = false,
                     IsDuplicateLaptopName = false
-                });
+                };
 
-
+                devices.Add(device);
             }
         }
 
-        if (devices.Count == 0)
+        if (devices.Count == 0 && errorMessages.Any())
+        {
+            MessageBox.Show(string.Join("\n", errorMessages), " Õ–Ì—", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+        else if (errorMessages.Any())
+        {
+            MessageBox.Show(
+                "Â‰«ﬂ √Œÿ«¡ ›Ì «·’›Ê› «· «·Ì…:\n" + string.Join("\n", errorMessages),
+                caption:" Õ–Ì—",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            );
+            return new List<ExcelDevice>();
+        }
+        else if (devices.Count == 0)
+        {
             MessageBox.Show("·„ Ì „ «·⁄ÀÊ— ⁄·Ï »Ì«‰«  ’«·Õ… ›Ì «·„·›.", " Õ–Ì—", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
 
         return devices;
     }
-
 
     private bool CheckDuplicatesInFile(List<ExcelDevice> devices)
     {
@@ -837,92 +891,65 @@ public partial class MainForm : Form
         return true;
     }
 
-    private async void CheckDuplicatesInDatabase(List<ExcelDevice> devices)
+    private async Task<bool> CheckDuplicatesInDatabaseAsync(List<ExcelDevice> devices)
     {
         try
         {
+            //  ÕÊÌ· √ÃÂ“… ExcelDevice ≈·Ï CheckDuplicateDto „⁄ «·ÕﬁÊ· «·„ÿ·Ê»… ›ﬁÿ
             var checkItems = devices.Select(d => new CheckDuplicateDto
             {
                 SerialNumber = d.SerialNumber,
                 LaptopName = d.LaptopName
             }).ToList();
 
-            var response = await _deviceService.CheckDuplicatesAsync(checkItems);
-            foreach (var device in devices)
+            var response =await  _deviceService.CheckDuplicatesInDatabaseAsync(checkItems);
+
+            if (!response.Success)
             {
-                if (response.Data.DuplicateLaptopNames.Contains(device.SerialNumber))
-                {
-                    device.IsDuplicateSerial = true;
-                }
-                if (response.Data.DuplicateLaptopNames.Contains(device.LaptopName))
-                {
-                    device.IsDuplicateLaptopName = true;
-                }
+                MessageBox.Show($"ÕœÀ Œÿ√ √À‰«¡ «· Õﬁﬁ „‰ «· ﬂ—«—« : {response.Message}",
+                                "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
 
-            _excelData = devices.OrderByDescending(d => d.IsDuplicateSerial)
-                               .ThenByDescending(d => d.IsDuplicateLaptopName)
-                               .ToList();
+            var duplicates = response.Data;
 
-            ShowExcelPreviewDialog();
-            LoadDevices();
+            bool hasDuplicates = false;
+            string message = "";
+
+            if (duplicates.DuplicateSerialNumbers != null && duplicates.DuplicateSerialNumbers.Any())
+            {
+                hasDuplicates = true;
+                message += "ÌÊÃœ √—ﬁ«„  ”·”· „ﬂ——…:\n" + string.Join("\n", duplicates.DuplicateSerialNumbers) + "\n\n";
+            }
+
+            if (duplicates.DuplicateLaptopNames != null && duplicates.DuplicateLaptopNames.Any())
+            {
+                hasDuplicates = true;
+                message += "ÌÊÃœ √”„«¡ ·«»  Ê» „ﬂ——…:\n" + string.Join("\n", duplicates.DuplicateLaptopNames) + "\n\n";
+            }
+
+            if (hasDuplicates)
+            {
+                MessageBox.Show(message, " ﬂ—«—«  „ÊÃÊœ…", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            return true;
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Œÿ√ √À‰«¡ «· Õﬁﬁ „‰ «· ﬂ—«—« : {ex.Message}", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            _excelData.Clear();
+            MessageBox.Show($"Œÿ√ √À‰«¡ «· Õﬁﬁ „‰ «· ﬂ—«—« : {ex.Message}",
+                            "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
         }
     }
+
+
 
     private void ShowExcelPreviewDialog()
     {
-        var previewForm = new ExcelPreviewForm(_excelData, UploadSelectedDevices);
+        var previewForm = new ExcelPreviewForm(_excelData);
         previewForm.ShowDialog();
-    }
-
-    private async void UploadSelectedDevices(List<ExcelDevice> selectedDevices)
-    {
-        if (!selectedDevices.Any())
-        {
-            MessageBox.Show("·„ Ì „  ÕœÌœ √Ì √ÃÂ“… ··—›⁄.", " Õ–Ì—", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-
-        try
-        {
-            _isLoading = true;
-            var uploadDtos = selectedDevices.Select(d => new DeviceUploadDto
-            {
-                Source = d.Source,
-                BrotherName = d.BrotherName,
-                LaptopName = d.LaptopName,
-                SystemPassword = d.SystemPassword,
-                WindowsPassword = d.WindowsPassword,
-                HardDrivePassword = d.HardDrivePassword,
-                FreezePassword = d.FreezePassword,
-                Code = d.Code,
-                Type = d.Type,
-                SerialNumber = d.SerialNumber,
-                Card = d.Card,
-                Comment = d.Comment,
-                ContactNumber = d.ContactNumber,
-                IsUpdate = d.IsDuplicateSerial || d.IsDuplicateLaptopName,
-                CreatedAt = d.CreatedAt
-            }).ToList();
-
-            var count = await _deviceService.ProcessDevicesAsync(uploadDtos);
-            MessageBox.Show($" „ „⁄«·Ã… {count} ÃÂ«“ »‰Ã«Õ.", "‰Ã«Õ", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            _excelData.Clear();
-            LoadDevices();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Œÿ√ √À‰«¡ „⁄«·Ã… «·√ÃÂ“…: {ex.Message}", "Œÿ√", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        finally
-        {
-            _isLoading = false;
-        }
     }
 
     private void DataGridViewDevices_SelectionChanged(object sender, EventArgs e)

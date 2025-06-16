@@ -3,31 +3,31 @@ using DeviceArchiving.Service.DeviceServices;
 using DeviceArchiving.WindowsForm.Dtos;
 using Guna.UI2.WinForms;
 using Microsoft.Extensions.DependencyInjection;
+using Mono.TextTemplating;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
+
 namespace DeviceArchiving.WindowsForm.Forms
 {
     public partial class ExcelPreviewForm : Form
     {
         private readonly List<ExcelDevice> _devices;
-        private readonly Action<List<ExcelDevice>> _uploadAction;
         private readonly IDeviceService _deviceService;
         private Guna2DataGridView _grid;
         private Guna2Button _btnUpload;
 
-        public ExcelPreviewForm(List<ExcelDevice> devices, Action<List<ExcelDevice>> uploadAction)
+        public ExcelPreviewForm(List<ExcelDevice> devices)
         {
             _devices = devices;
-            _uploadAction = uploadAction;
             _deviceService = Program.Services.GetService<IDeviceService>();
-            InitializeUI();
+            SetupUI();
         }
 
-        private void InitializeUI()
+        private void SetupUI()
         {
             this.StartPosition = FormStartPosition.CenterScreen;
             this.Width = Screen.PrimaryScreen.WorkingArea.Width;
@@ -169,7 +169,7 @@ namespace DeviceArchiving.WindowsForm.Forms
                     Card = d.Card,
                     Comment = d.Comment,
                     ContactNumber = d.ContactNumber,
-                    IsUpdate = d.IsDuplicateSerial || d.IsDuplicateLaptopName
+                    CreatedAt = d.CreatedAt,
                 })
                 .ToList();
 
@@ -194,7 +194,6 @@ namespace DeviceArchiving.WindowsForm.Forms
                     Properties.Settings.Default.CanUploadExcel = false;
                     Properties.Settings.Default.Save();
                     _devices.Clear();
-                    _uploadAction?.Invoke(new List<ExcelDevice>());
                     this.Close();
                 }
                 else

@@ -66,19 +66,19 @@ namespace DeviceArchiving.WindowsForm.Forms
             var lblBrotherName = CreateLabel("الأخ اسم", new Point(50, 70));
             var txtBrotherName = CreateTextBox("txtBrotherName", new Point(150, 65));
 
-            var lblLaptopName = CreateLabel("اسم اللاب توب", new Point(50, 110));
+            var lblLaptopName = CreateLabel("اللابتوب اسم", new Point(50, 110));
             var txtLaptopName = CreateTextBox("txtLaptopName", new Point(150, 105));
 
             var lblSystemPassword = CreateLabel("النظام مرور كلمة", new Point(50, 150));
             var txtSystemPassword = CreateTextBox("txtSystemPassword", new Point(150, 145));
 
-            var lblWindowsPassword = CreateLabel("النظام مرور كلمة", new Point(50, 190));
+            var lblWindowsPassword = CreateLabel("الويندوز  كلمة", new Point(50, 190));
             var txtWindowsPassword = CreateTextBox("txtWindowsPassword", new Point(150, 185));
 
-            var lblHardDrivePassword = CreateLabel("الصلب مرور كلمة", new Point(50, 230));
+            var lblHardDrivePassword = CreateLabel("الصلب قرص كلمة", new Point(50, 230));
             var txtHardDrivePassword = CreateTextBox("txtHardDrivePassword", new Point(150, 225));
 
-            var lblFreezePassword = CreateLabel("التجميد مرور كلمة", new Point(50, 270));
+            var lblFreezePassword = CreateLabel("التجميد كلمة", new Point(50, 270));
             var txtFreezePassword = CreateTextBox("txtFreezePassword", new Point(150, 265));
 
             var lblCode = CreateLabel("الكود", new Point(50, 310));
@@ -143,9 +143,9 @@ namespace DeviceArchiving.WindowsForm.Forms
                 lblCode, txtCode,
                 lblType, txtType,
                 lblSerialNumber, txtSerialNumber,
-                lblComment, txtComment,
                 lblContactNumber, txtContactNumber,
                 lblCard, txtCard,
+                lblComment, txtComment,
                 btnSave
             });
         }
@@ -202,7 +202,7 @@ namespace DeviceArchiving.WindowsForm.Forms
                     var response = await _deviceService.AddDeviceAsync(dto);
                     if (response.Success)
                     {
-                        MessageBox.Show("تم إضافة الجهاز بنجاح", "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show(response.Message, "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         this.DialogResult = DialogResult.OK;
                         this.Close();
                     }

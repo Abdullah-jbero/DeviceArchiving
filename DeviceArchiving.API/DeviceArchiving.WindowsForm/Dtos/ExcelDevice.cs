@@ -21,6 +21,7 @@ namespace DeviceArchiving.WindowsForm.Dtos
         public bool IsSelected { get; set; }
         public bool IsDuplicateSerial { get; set; }
         public bool IsDuplicateLaptopName { get; set; }
+
     }
 
 

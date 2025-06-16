@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Service.DeviceServices;
@@ -29,7 +30,6 @@ public partial class DeletedDevicesForm : Form
         this.BackColor = Color.WhiteSmoke;
         this.RightToLeft = RightToLeft.Yes;
         this.RightToLeftLayout = true;
-
         // Header Label
         var lblHeader = new Guna2HtmlLabel
         {
@@ -40,12 +40,11 @@ public partial class DeletedDevicesForm : Form
             ForeColor = Color.FromArgb(26, 115, 232),
             RightToLeft = RightToLeft.Yes
         };
-
         // Devices Table
         var dataGridViewDeletedDevices = new Guna2DataGridView
         {
             Location = new Point(20, 60),
-            Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 100),
+            Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 150), 
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
             Name = "dataGridViewDeletedDevices",
             RightToLeft = RightToLeft.Yes,
@@ -57,7 +56,7 @@ public partial class DeletedDevicesForm : Form
             ReadOnly = true,
             BackgroundColor = Color.White,
             BorderStyle = BorderStyle.None,
-            CellBorderStyle = DataGridViewCellBorderStyle.SingleVertical, // إضافة حدود عمودية
+            CellBorderStyle = DataGridViewCellBorderStyle.SingleVertical,
             ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None,
             EnableHeadersVisualStyles = false,
             ColumnHeadersHeight = 40,
@@ -66,7 +65,7 @@ public partial class DeletedDevicesForm : Form
                 BackColor = Color.FromArgb(26, 115, 232),
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Alignment = DataGridViewContentAlignment.MiddleCenter // محاذاة النص في المنتصف
+                Alignment = DataGridViewContentAlignment.MiddleCenter
             },
             DefaultCellStyle = new DataGridViewCellStyle
             {
@@ -75,13 +74,33 @@ public partial class DeletedDevicesForm : Form
                 SelectionForeColor = Color.Black
             }
         };
-        this.Controls.AddRange(new Control[] { lblHeader, dataGridViewDeletedDevices });
-
+        // Restore Button
+        var btnRestore = new Guna2Button
+        {
+            Text = "استعادة الجهاز",
+            Size = new Size(150, 40),
+            Location = new Point(this.ClientSize.Width - 170, this.ClientSize.Height - 80),
+            Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+            FillColor = Color.FromArgb(26, 115, 232),
+            ForeColor = Color.White,
+            Font = new Font("Segoe UI", 10, FontStyle.Bold),
+            RightToLeft = RightToLeft.Yes,
+            BorderRadius = 5,
+            Enabled = false 
+        };
+        btnRestore.Click += async (s, e) => await RestoreDeviceAsync(dataGridViewDeletedDevices);
+        // Enable/Disable Restore Button based on selection
+        dataGridViewDeletedDevices.SelectionChanged += (s, e) =>
+        {
+            btnRestore.Enabled = dataGridViewDeletedDevices.SelectedRows.Count > 0;
+        };
+        this.Controls.AddRange(new Control[] { lblHeader, dataGridViewDeletedDevices, btnRestore });
         // Resize event handler
         this.Resize += (s, e) =>
         {
-            dataGridViewDeletedDevices.Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 100);
+            dataGridViewDeletedDevices.Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 150);
             dataGridViewDeletedDevices.Location = new Point(20, 60);
+            btnRestore.Location = new Point(this.ClientSize.Width - 170, this.ClientSize.Height - 80);
         };
     }
 
@@ -98,7 +117,35 @@ public partial class DeletedDevicesForm : Form
         }
     }
 
+    private async Task RestoreDeviceAsync(Guna2DataGridView dgv)
+    {
+        if (dgv.SelectedRows.Count == 0) return;
 
+        var selectedDevice = dgv.SelectedRows[0].DataBoundItem as GetAllDevicesDto;
+        if (selectedDevice == null) return;
+
+        var confirmResult = MessageBox.Show(
+            $"هل أنت متأكد من استعادة الجهاز '{selectedDevice.LaptopName}'؟",
+            "تأكيد الاستعادة",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question,
+            MessageBoxDefaultButton.Button2,
+            MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
+
+        if (confirmResult != DialogResult.Yes) return;
+
+        try
+        {
+            await _deviceService.RestoreDeviceAsync(selectedDevice.Id);
+            _deletedDevices.Remove(selectedDevice);
+            UpdateDeletedDevicesGrid();
+            MessageBox.Show("تم استعادة الجهاز بنجاح", "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"خطأ أثناء استعادة الجهاز: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
 
     private void UpdateDeletedDevicesGrid()
     {
@@ -108,7 +155,6 @@ public partial class DeletedDevicesForm : Form
         dgv.DataSource = null;
         dgv.DataSource = _deletedDevices;
         dgv.ScrollBars = ScrollBars.Both;
-
         var columnsRename = new Dictionary<string, string>
         {
             {"Id", "م"},
@@ -128,19 +174,17 @@ public partial class DeletedDevicesForm : Form
             {"UserName", "تم بواسطة"},
             {"CreatedAt", "تاريخ الإنشاء"}
         };
-
         foreach (DataGridViewColumn column in dgv.Columns)
         {
             if (columnsRename.ContainsKey(column.Name))
             {
                 column.HeaderText = columnsRename[column.Name];
-                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells; 
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
             }
             else
             {
                 column.Visible = false;
             }
         }
-
     }
 }

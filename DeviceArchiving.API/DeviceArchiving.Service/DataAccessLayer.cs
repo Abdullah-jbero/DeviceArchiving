@@ -8,12 +8,18 @@ public partial class DataAccessLayer
     private readonly string _connectionString;
     private readonly string _pathDb;
 
-    public DataAccessLayer(string connectionString , string pathDb)
+    public DataAccessLayer(string connectionString, string pathDb)
     {
         _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
         _pathDb = pathDb ?? throw new ArgumentNullException(nameof(pathDb));
     }
 
+
+    public string GetConnectionString()
+    {
+        CheckDatabaseFile();
+        return _connectionString;
+    }
     public async Task ExecuteNonQueryAsync(string storedProcedureName, SqlParameter[] parameters)
     {
         CheckDatabaseFile();
