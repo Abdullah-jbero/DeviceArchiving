@@ -8,12 +8,16 @@ using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Service.DeviceServices;
 using Guna.UI2.WinForms;
 
-
 namespace DeviceArchiving.WindowsForm.Forms;
+
 public partial class DeletedDevicesForm : Form
 {
     private readonly IDeviceService _deviceService;
     private List<GetAllDevicesDto> _deletedDevices = new List<GetAllDevicesDto>();
+    private string _globalSearchQuery = "";
+    private string _laptopNameFilter = "";
+    private string _serialNumberFilter = "";
+    private string _typeFilter = "";
 
     public DeletedDevicesForm(IDeviceService deviceService)
     {
@@ -30,6 +34,7 @@ public partial class DeletedDevicesForm : Form
         this.BackColor = Color.WhiteSmoke;
         this.RightToLeft = RightToLeft.Yes;
         this.RightToLeftLayout = true;
+
         // Header Label
         var lblHeader = new Guna2HtmlLabel
         {
@@ -40,11 +45,138 @@ public partial class DeletedDevicesForm : Form
             ForeColor = Color.FromArgb(26, 115, 232),
             RightToLeft = RightToLeft.Yes
         };
+
+        // Search Panel
+        var searchPanel = new Guna2Panel
+        {
+            Location = new Point(20, 60),
+            Size = new Size(this.ClientSize.Width - 40, 110),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+            BorderColor = Color.LightGray,
+            BorderThickness = 1,
+            FillColor = Color.White,
+            ShadowDecoration = { Enabled = true, Shadow = new Padding(5) },
+            RightToLeft = RightToLeft.Yes,
+        };
+
+        // Labels and TextBoxes
+        var lblGlobalSearch = new Guna2HtmlLabel
+        {
+            Text = "العام البحث",
+            Location = new Point(searchPanel.ClientSize.Width + 100, 20),
+            AutoSize = true,
+            RightToLeft = RightToLeft.Yes,
+            TabStop = false
+        };
+
+        var txtGlobalSearch = new Guna2TextBox
+        {
+            Location = new Point(lblGlobalSearch.Left - 410, 15),
+            Width = 400,
+            Name = "txtGlobalSearch",
+            PlaceholderText = "ابحث هنا...",
+            BorderRadius = 8,
+            RightToLeft = RightToLeft.Yes,
+            TabIndex = 0
+        };
+
+        var lblLaptopName = new Guna2HtmlLabel
+        {
+            Text = "توب اللاب اسم",
+            Location = new Point(searchPanel.ClientSize.Width - 100, 60),
+            AutoSize = true,
+            TabStop = false
+        };
+
+        var txtLaptopName = new Guna2TextBox
+        {
+            Location = new Point(lblLaptopName.Left - 210, 55),
+            Width = 200,
+            Name = "txtLaptopName",
+            PlaceholderText = "اسم اللاب توب",
+            BorderRadius = 8,
+            RightToLeft = RightToLeft.Yes,
+            TabIndex = 1
+        };
+
+        var lblSerialNumber = new Guna2HtmlLabel
+        {
+            Text = "التسلسلي الرقم",
+            Location = new Point(txtLaptopName.Left - 100, 60),
+            AutoSize = true,
+            RightToLeft = RightToLeft.Yes,
+            TabStop = false
+        };
+
+        var txtSerialNumber = new Guna2TextBox
+        {
+            Location = new Point(lblSerialNumber.Left - 210, 55),
+            Width = 200,
+            Name = "txtSerialNumber",
+            PlaceholderText = "الرقم التسلسلي",
+            BorderRadius = 8,
+            RightToLeft = RightToLeft.Yes,
+            TabIndex = 2
+        };
+
+        var lblType = new Guna2HtmlLabel
+        {
+            Text = "النوع",
+            Location = new Point(txtSerialNumber.Left - 35, 60),
+            AutoSize = true,
+            RightToLeft = RightToLeft.Yes,
+            TabStop = false
+        };
+
+        var cmbType = new Guna2ComboBox
+        {
+            Location = new Point(lblType.Left - 210, 55),
+            Width = 200,
+            Name = "cmbType",
+            BorderRadius = 8,
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            RightToLeft = RightToLeft.Yes,
+            TabIndex = 3
+        };
+
+        // Populate ComboBox with unique types
+        cmbType.Items.AddRange(_deletedDevices.Select(d => d.Type).Distinct().Where(t => !string.IsNullOrEmpty(t)).ToArray());
+
+        // Clear Button
+        var btnClear = new Guna2Button
+        {
+            Text = "مسح",
+            Location = new Point(cmbType.Left - 100, 55),
+            Width = 70,
+            BorderRadius = 8,
+            FillColor = Color.FromArgb(230, 57, 70),
+            ForeColor = Color.White,
+            HoverState = { FillColor = Color.FromArgb(200, 30, 50) },
+            RightToLeft = RightToLeft.Yes,
+            TabIndex = 4
+        };
+
+        // Event Handlers
+        txtGlobalSearch.TextChanged += (s, e) => { _globalSearchQuery = txtGlobalSearch.Text; ApplyFilters(); };
+        txtLaptopName.TextChanged += (s, e) => { _laptopNameFilter = txtLaptopName.Text; ApplyFilters(); };
+        txtSerialNumber.TextChanged += (s, e) => { _serialNumberFilter = txtSerialNumber.Text; ApplyFilters(); };
+        cmbType.SelectedIndexChanged += (s, e) => { _typeFilter = cmbType.SelectedItem?.ToString() ?? ""; ApplyFilters(); };
+        btnClear.Click += BtnClearFilters_Click;
+
+        // Adding Controls to Panel
+        searchPanel.Controls.AddRange(new Control[] {
+            lblGlobalSearch, txtGlobalSearch,
+            lblLaptopName, txtLaptopName,
+            lblSerialNumber, txtSerialNumber,
+            lblType, cmbType,
+            btnClear
+        });
+
         // Devices Table
         var dataGridViewDeletedDevices = new Guna2DataGridView
         {
-            Location = new Point(20, 60),
-            Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 150), 
+            Location = new Point(20, 180),
+            Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 270),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
             Name = "dataGridViewDeletedDevices",
             RightToLeft = RightToLeft.Yes,
@@ -74,6 +206,7 @@ public partial class DeletedDevicesForm : Form
                 SelectionForeColor = Color.Black
             }
         };
+
         // Restore Button
         var btnRestore = new Guna2Button
         {
@@ -86,20 +219,24 @@ public partial class DeletedDevicesForm : Form
             Font = new Font("Segoe UI", 10, FontStyle.Bold),
             RightToLeft = RightToLeft.Yes,
             BorderRadius = 5,
-            Enabled = false 
+            Enabled = false
         };
         btnRestore.Click += async (s, e) => await RestoreDeviceAsync(dataGridViewDeletedDevices);
+
         // Enable/Disable Restore Button based on selection
         dataGridViewDeletedDevices.SelectionChanged += (s, e) =>
         {
             btnRestore.Enabled = dataGridViewDeletedDevices.SelectedRows.Count > 0;
         };
-        this.Controls.AddRange(new Control[] { lblHeader, dataGridViewDeletedDevices, btnRestore });
+
+        this.Controls.AddRange(new Control[] { lblHeader, searchPanel, dataGridViewDeletedDevices, btnRestore });
+
         // Resize event handler
         this.Resize += (s, e) =>
         {
-            dataGridViewDeletedDevices.Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 150);
-            dataGridViewDeletedDevices.Location = new Point(20, 60);
+            searchPanel.Size = new Size(this.ClientSize.Width - 40, 110);
+            dataGridViewDeletedDevices.Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 270);
+            dataGridViewDeletedDevices.Location = new Point(20, 180);
             btnRestore.Location = new Point(this.ClientSize.Width - 170, this.ClientSize.Height - 80);
         };
     }
@@ -110,13 +247,19 @@ public partial class DeletedDevicesForm : Form
         {
             _deletedDevices = (await _deviceService.GetAllDevicesAsync()).Where(d => d.IsActive == false).ToList();
             UpdateDeletedDevicesGrid();
+            // Populate ComboBox with unique types
+            var cmbType = this.Controls.Find("cmbType", true).FirstOrDefault() as Guna2ComboBox;
+            if (cmbType != null)
+            {
+                cmbType.Items.Clear();
+                cmbType.Items.AddRange(_deletedDevices.Select(d => d.Type).Distinct().Where(t => !string.IsNullOrEmpty(t)).ToArray());
+            }
         }
         catch (Exception ex)
         {
             MessageBox.Show($"خطأ أثناء تحميل الأجهزة المحذوفة: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
-
     private async Task RestoreDeviceAsync(Guna2DataGridView dgv)
     {
         if (dgv.SelectedRows.Count == 0) return;
@@ -146,7 +289,34 @@ public partial class DeletedDevicesForm : Form
             MessageBox.Show($"خطأ أثناء استعادة الجهاز: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
+    private void ApplyFilters()
+    {
+        UpdateDeletedDevicesGrid();
+    }
 
+    private void BtnClearFilters_Click(object sender, EventArgs e)
+    {
+        var txtGlobalSearch = this.Controls.Find("txtGlobalSearch", true).FirstOrDefault() as Guna2TextBox;
+        var txtLaptopName = this.Controls.Find("txtLaptopName", true).FirstOrDefault() as Guna2TextBox;
+        var txtSerialNumber = this.Controls.Find("txtSerialNumber", true).FirstOrDefault() as Guna2TextBox;
+        var cmbType = this.Controls.Find("cmbType", true).FirstOrDefault() as Guna2ComboBox;
+
+        if (txtGlobalSearch != null)
+            txtGlobalSearch.Text = "";
+        if (txtLaptopName != null)
+            txtLaptopName.Text = "";
+        if (txtSerialNumber != null)
+            txtSerialNumber.Text = "";
+        if (cmbType != null)
+            cmbType.SelectedIndex = -1;
+
+        _globalSearchQuery = "";
+        _laptopNameFilter = "";
+        _serialNumberFilter = "";
+        _typeFilter = "";
+
+        ApplyFilters();
+    }
     private void UpdateDeletedDevicesGrid()
     {
         var dgv = Controls.Find("dataGridViewDeletedDevices", true).FirstOrDefault() as Guna2DataGridView;
