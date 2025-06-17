@@ -141,7 +141,7 @@ p-fileUpload {
     flex: 1;
   }
 
-  .search-fields .p-inputtext,
+  .search-fields .input,
   .search-fields .p-dropdown {
     width: 100%;
   }

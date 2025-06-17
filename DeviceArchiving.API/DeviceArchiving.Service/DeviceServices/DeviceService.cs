@@ -121,9 +121,14 @@ public class DeviceService : IDeviceService
         };
 
         if (!existingSerials.Any() && !existingLaptopNames.Any())
+        {
             return BaseResponse<DuplicateCheckResponse>.SuccessResult(response, "لا توجد أرقام تسلسلية أو أسماء لاب توب مكررة في قاعدة البيانات");
+        }
+        else
+        {
+            return BaseResponse<DuplicateCheckResponse>.Failure( );
 
-        return BaseResponse<DuplicateCheckResponse>.SuccessResult(response, "تم العثور على تكرارات");
+        }
 
     }
 

@@ -33,6 +33,7 @@ export interface DevicesDto {
   contactNumber?: string | null; // Allow null to match CreateDeviceDto
   userName: string;
   createdAt: string;
+  isActive: boolean;
 }
 
 export interface OperationDto {

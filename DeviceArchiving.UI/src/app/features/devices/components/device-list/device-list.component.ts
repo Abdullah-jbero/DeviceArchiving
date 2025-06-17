@@ -13,6 +13,7 @@ import { FileSelectEvent } from 'primeng/fileupload';
 import { BaseResponse } from '../../../../core/models/update-device.model';
 import { CreateDeviceDto } from '../../../../core/models/create-device.model';
 import { AccountService } from '../../../../core/services/account.service';
+import { Route } from '@angular/router';
 
 
 
@@ -85,6 +86,7 @@ export class DeviceListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (devices: DevicesDto[]) => {
           this.devices = devices;
+          this.devices = devices.filter(d => d.isActive === true);
           this.filteredDevices = [...devices];
           this.deviceTypes = [
             ...new Set(devices.map((device) => device.type)),
@@ -605,7 +607,7 @@ export class DeviceListComponent implements OnInit, OnDestroy {
 
     this.excelData = this.excelData.map(device => ({
       ...device,
-      isSelected: false 
+      isSelected: false
     }));
 
     this.cdr.detectChanges(); // Trigger change detection
@@ -683,6 +685,9 @@ export class DeviceListComponent implements OnInit, OnDestroy {
         }
       });
   }
+
+
+
 
   ngOnDestroy(): void {
     this.destroy$.next();

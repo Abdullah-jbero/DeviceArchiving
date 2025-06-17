@@ -66,10 +66,10 @@ static class Program
         }
 
         services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
-        services.AddSingleton<UserIdInterceptor>(sp => new UserIdInterceptor(() => AppSession.CurrentUserId));
+        services.AddSingleton<CustomUserIdInterceptor>(sp => new CustomUserIdInterceptor(() => AppSession.CurrentUserId));
         services.AddDbContextFactory<DeviceArchivingContext>(options =>
             options.UseSqlServer(connectionString)
-                   .AddInterceptors(services.BuildServiceProvider().GetRequiredService<UserIdInterceptor>()));
+                   .AddInterceptors(services.BuildServiceProvider().GetRequiredService<CustomUserIdInterceptor>()));
 
         services.AddSingleton<IConfiguration>(configuration);
         services.AddScoped<IAccountService, AccountProcedureService>();

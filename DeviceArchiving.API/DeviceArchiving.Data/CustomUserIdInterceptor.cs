@@ -3,19 +3,17 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
 namespace DeviceArchiving.Data;
 
-public class UserIdInterceptor : ISaveChangesInterceptor
+public class CustomUserIdInterceptor : ISaveChangesInterceptor
 {
     private readonly Func<int> _getCurrentUserId;
 
     // Inject a delegate to get the current user ID
-    public UserIdInterceptor(Func<int> getCurrentUserId)
+    public CustomUserIdInterceptor(Func<int> getCurrentUserId)
     {
         _getCurrentUserId = getCurrentUserId;
     }
