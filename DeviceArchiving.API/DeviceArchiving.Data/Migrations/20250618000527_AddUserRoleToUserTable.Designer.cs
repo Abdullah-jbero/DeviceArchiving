@@ -4,6 +4,7 @@ using DeviceArchiving.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeviceArchiving.Data.Migrations
 {
     [DbContext(typeof(DeviceArchivingContext))]
-    partial class DeviceArchivingContextModelSnapshot : ModelSnapshot
+    [Migration("20250618000527_AddUserRoleToUserTable")]
+    partial class AddUserRoleToUserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -178,9 +181,8 @@ namespace DeviceArchiving.Data.Migrations
                     b.Property<byte[]>("Picture")
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserName")
                         .IsRequired()

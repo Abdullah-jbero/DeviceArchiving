@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 using DeviceArchiving.Data.Dto;
 using DeviceArchiving.Data.Dto.Devices;
 using DeviceArchiving.Data.Entities;
+using DeviceArchiving.Data.Enums;
 using DeviceArchiving.Service.DeviceServices;
 using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Office2010.Excel;
@@ -80,17 +81,27 @@ public class DevicesController : ControllerBase
 
 
     [HttpPost("upload-devices")]
+    [Authorize(Roles = UserRole.Admin)]
     [ProducesResponseType(typeof(BaseResponse<int>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse<int>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadDevices([FromBody] List<DeviceUploadDto> devices)
     {
+        // Check if the devices list is null or empty
         if (devices == null || !devices.Any())
+        {
             return BadRequest(BaseResponse<int>.Failure("·„ Ì „ ≈—”«· √Ì √ÃÂ“…"));
+        }
 
+        // Optionally, check model state for validation issues
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(BaseResponse<int>.Failure("«·»Ì«‰«  «·„œŒ·… €Ì— ’ÕÌÕ…"));
+        }
+
+        // Process devices
         var response = await _deviceService.ProcessDevicesAsync(devices);
         return response.Success ? Ok(response) : BadRequest(response);
     }
-
 
 
     [HttpPost("check-duplicates")]

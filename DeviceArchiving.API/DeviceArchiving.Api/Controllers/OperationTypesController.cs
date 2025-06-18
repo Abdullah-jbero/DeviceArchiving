@@ -17,9 +17,9 @@ public class OperationTypesController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<OperationType>> GetOperationTypes([FromQuery] string? searchTerm = null)
+    public async Task<ActionResult<List<OperationType>>> GetOperationTypes([FromQuery] string? searchTerm = null)
     {
-        var operationTypes = operationTypeService.GetAllOperationsTypes(searchTerm);
+        var operationTypes = await operationTypeService.GetAllOperationsTypes(searchTerm);
         return Ok(operationTypes);
     }
 

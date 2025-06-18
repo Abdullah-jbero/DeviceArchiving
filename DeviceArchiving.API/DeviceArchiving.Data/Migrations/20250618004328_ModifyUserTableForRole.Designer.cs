@@ -4,6 +4,7 @@ using DeviceArchiving.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeviceArchiving.Data.Migrations
 {
     [DbContext(typeof(DeviceArchivingContext))]
-    partial class DeviceArchivingContextModelSnapshot : ModelSnapshot
+    [Migration("20250618004328_ModifyUserTableForRole")]
+    partial class ModifyUserTableForRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

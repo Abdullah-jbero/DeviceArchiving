@@ -1,4 +1,4 @@
-﻿namespace DeviceArchiving.Data.Dto;
+﻿namespace DeviceArchiving.Data.Dto.Operations;
 
 public class CreateOperation 
 {
@@ -7,7 +7,4 @@ public class CreateOperation
     public string? OldValue { get; set; }
     public string? NewValue { get; set; }
     public string? Comment { get; set; }
-
-
-
 }

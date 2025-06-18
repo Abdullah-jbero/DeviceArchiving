@@ -6,7 +6,9 @@ using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DeviceArchiving.Service.DeviceServices;
@@ -99,11 +101,21 @@ public class DeviceService : IDeviceService
 
     public async Task<BaseResponse<DuplicateCheckResponse>> CheckDuplicatesInDatabaseAsync(List<CheckDuplicateDto> items)
     {
+        // Extract serial numbers and laptop names from the input list
+        var serialNumbers = items
+            .Select(i => i.SerialNumber)
+            .Where(sn => !string.IsNullOrEmpty(sn))
+            .ToList();
 
-        var serialNumbers = items.Select(i => i.SerialNumber).Where(sn => !string.IsNullOrEmpty(sn)).ToList();
-        var laptopNames = items.Select(i => i.LaptopName).Where(ln => !string.IsNullOrEmpty(ln)).ToList();
+        var laptopNames = items
+            .Select(i => i.LaptopName)
+            .Where(ln => !string.IsNullOrEmpty(ln))
+            .ToList();
 
+        // Create database context
         await using var context = await _contextFactory.CreateDbContextAsync();
+
+        // Fetch existing serial numbers and laptop names from the database
         var existingSerials = await context.Devices
             .Where(d => serialNumbers.Contains(d.SerialNumber))
             .Select(d => d.SerialNumber)
@@ -114,22 +126,29 @@ public class DeviceService : IDeviceService
             .Select(d => d.LaptopName)
             .ToListAsync();
 
+        // Prepare the response
         var response = new DuplicateCheckResponse
         {
             DuplicateSerialNumbers = existingSerials,
             DuplicateLaptopNames = existingLaptopNames
         };
 
+        // Check for duplicates and return the appropriate response
         if (!existingSerials.Any() && !existingLaptopNames.Any())
         {
-            return BaseResponse<DuplicateCheckResponse>.SuccessResult(response, "لا توجد أرقام تسلسلية أو أسماء لاب توب مكررة في قاعدة البيانات");
+            return BaseResponse<DuplicateCheckResponse>.SuccessResult(
+                response,
+                "لا توجد أرقام تسلسلية أو أسماء لاب توب مكررة في قاعدة البيانات"
+            );
         }
         else
         {
-            return BaseResponse<DuplicateCheckResponse>.Failure( );
+            // Create a message listing the duplicates
+            var duplicateMessage = "الأسماء لاب توب المكررة: " + string.Join(", \n", existingLaptopNames) +
+                                   " | الأرقام التسلسلية المكررة: " + string.Join(", \n", existingSerials);
 
+            return BaseResponse<DuplicateCheckResponse>.Failure(duplicateMessage);
         }
-
     }
 
     public async Task<BaseResponse<int>> ProcessDevicesAsync(List<DeviceUploadDto> dtos)
@@ -137,25 +156,22 @@ public class DeviceService : IDeviceService
         if (dtos == null || !dtos.Any())
             return BaseResponse<int>.Failure("لا توجد أجهزة للمعالجة");
 
-        var userId = AppSession.CurrentUserId;
-        if (userId == 0)
-            return BaseResponse<int>.Failure("معرف المستخدم غير صالح");
+
+
 
         await using var context = await _contextFactory.CreateDbContextAsync();
         int processedCount = 0;
         const int batchSize = 100;
 
-        // Check for duplicates first
         var checkDuplicates = await CheckDuplicatesInDatabaseAsync(dtos.Select(d => new CheckDuplicateDto
         {
             SerialNumber = d.SerialNumber,
             LaptopName = d.LaptopName
         }).ToList());
 
-        if (checkDuplicates.Data.DuplicateSerialNumbers.Any() || checkDuplicates.Data.DuplicateLaptopNames.Any())
+        if (checkDuplicates.Data != null && (checkDuplicates.Data.DuplicateSerialNumbers.Any() || checkDuplicates.Data.DuplicateLaptopNames.Any()))
             return BaseResponse<int>.Failure("تم العثور على أرقام تسلسلية أو أسماء لاب توب مكررة");
 
-        // Process in batches
         foreach (var batch in dtos.Chunk(batchSize))
         {
             var devices = batch.Select(dto => new Device
@@ -174,8 +190,7 @@ public class DeviceService : IDeviceService
                 Comment = dto.Comment,
                 ContactNumber = dto.ContactNumber,
                 IsActive = true,
-                CreatedAt = dto.CreatedAt,
-                UserId = userId
+                CreatedAt = dto.CreatedAt!, 
             }).ToList();
 
             context.Devices.AddRange(devices);
@@ -186,11 +201,11 @@ public class DeviceService : IDeviceService
         return BaseResponse<int>.SuccessResult(processedCount, $"تم معالجة {processedCount} جهاز بنجاح");
     }
 
+
     public async Task<List<GetAllDevicesDto>> GetAllDevicesAsync()
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
         return await context.Devices
-            .Where(d => d.IsActive)
             .Include(d => d.User)
             .Select(d => new GetAllDevicesDto
             {
@@ -210,6 +225,7 @@ public class DeviceService : IDeviceService
                 Card = d.Card,
                 UserName = d.User.UserName,
                 CreatedAt = d.CreatedAt,
+                IsActive = d.IsActive,
 
             })
             .ToListAsync();

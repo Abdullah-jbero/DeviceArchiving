@@ -1,4 +1,5 @@
 ﻿using DeviceArchiving.Data.Dto;
+using DeviceArchiving.Data.Dto.Operations;
 using DeviceArchiving.Data.Entities;
 using DeviceArchiving.Service.OperationServices;
 using DeviceArchiving.Service.OperationTypeServices;

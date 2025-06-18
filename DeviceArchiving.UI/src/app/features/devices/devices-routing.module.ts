@@ -9,7 +9,7 @@ const routes: Routes = [
   { path: '', component: DeviceListComponent },
   { path: 'add', component: DeviceFormComponent },
   { path: 'edit/:id', component: DeviceFormComponent },
-  { path: 'deleteDevices', component: DeletedDevicesComponent },
+  { path: 'delete-devices', component: DeletedDevicesComponent },
 
 ];
 

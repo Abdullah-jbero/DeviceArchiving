@@ -69,7 +69,8 @@ public class AccountService : IAccountService
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.UserName),
-            new Claim(ClaimTypes.GivenName, user.UserName)
+            new Claim(ClaimTypes.GivenName, user.UserName),
+            new Claim(ClaimTypes.Role, user.Role)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));

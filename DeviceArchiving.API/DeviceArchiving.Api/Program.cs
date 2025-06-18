@@ -1,6 +1,8 @@
 ﻿using DeviceArchiving.Data;
 using DeviceArchiving.Data.Contexts;
 using DeviceArchiving.Data.Dto;
+using DeviceArchiving.Data.Entities;
+using DeviceArchiving.Data.Enums;
 using DeviceArchiving.Service.AccountServices;
 using DeviceArchiving.Service.DeviceServices;
 using DeviceArchiving.Service.OperationServices;
@@ -50,7 +52,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings.Issuer,
+            ValidIssuer = jwtSettings!.Issuer,
             ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
         };
@@ -72,6 +74,26 @@ var app = builder.Build();
 
 app.UseMiddleware<DbExceptionMiddleware>();
 
+//⚙️ Apply Migrations in Production
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DeviceArchivingContext>();
+    try
+    {
+        // Apply any pending migrations
+        dbContext.Database.Migrate();
+        app.Logger.LogInformation("Database migrations applied successfully.");
+
+        // Seed admin user
+        await SeedAdminUser(dbContext);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred while applying database migrations.");
+        throw; // Optionally, stop the application if migrations fail
+    }
+}
+
 app.UseCors("CorsPolicy");
 
 app.UseSwagger();
@@ -83,3 +105,23 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Method to seed the admin user
+ static async Task SeedAdminUser(DeviceArchivingContext dbContext)
+{
+    var userName = "admin";
+    var adminUser = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == userName);
+    if (adminUser == null)
+    {
+        adminUser = new User
+        {
+            UserName = userName,
+            Password = BCrypt.Net.BCrypt.HashPassword("Z5%Y7&X9(ABC"),
+            Role = UserRole.Admin
+
+        };
+
+        dbContext.Users.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+    }
+}

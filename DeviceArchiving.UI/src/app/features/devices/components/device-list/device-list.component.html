@@ -29,17 +29,14 @@
       [disabled]="!selectedDevice" />
 
 
-    <p-fileUpload #fileInput mode="basic" accept=".xlsx,.xls" (onSelect)="onFileSelected($event)" [disabled]="loading"
+    <p-fileUpload *ngIf="role === 'Admin'" #fileInput mode="basic" accept=".xlsx,.xls" (onSelect)="onFileSelected($event)" [disabled]="loading"
       styleClass="p-button-secondary" chooseLabel="اختر ملف Excel" aria-label="تحميل ملف Excel"></p-fileUpload>
 
     <p-button label="اضافة العمليات" styleClass="p-button-success" [disabled]="!selectedDevice"
       (click)="addOperation(selectedDevice!.id!)" />
 
 
-    <p-button label="الأجهزة المحذوفة" styleClass="p-button-secondary" routerLink="/devices/deleteDevices"
-      aria-label="عرض الأجهزة المحذوفة">
-      <i class="pi pi-trash"></i>
-    </p-button>
+
 
 
   </div>
@@ -124,7 +121,7 @@
             <td>{{ device.contactNumber }}</td>
             <td>{{ device.card }}</td>
             <td>{{ device.userName }}</td>
-            <td>{{ device.createdAt | date : "short" }}</td>
+            <td>{{ device.createdAt | date : "yyyy/MM/dd" }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="summary">
@@ -141,7 +138,7 @@
   <p-dialog header="معاينة بيانات Excel" [(visible)]="displayDialog" [modal]="true" [style]="{ width: '90vw' }"
     [draggable]="false" [resizable]="false" aria-labelledby="dialog-title">
     <div *ngIf="excelData.length > 0; else noData" class="table-container">
-      <p-table [value]="filteredDevices" [tableStyle]="{ 'min-width': '100%' }" scrollable="true" scrollHeight="500px"
+      <p-table [value]="excelData" [tableStyle]="{ 'min-width': '100%' }" scrollable="true" scrollHeight="500px"
         sortMode="single" styleClass="p-datatable-gridlines p-datatable-striped" [rowHover]="true"
         [showCurrentPageReport]="true" responsiveLayout="scroll">
         <ng-template pTemplate="header">
@@ -159,15 +156,12 @@
             <th scope="col">الرقم التسلسلي</th>
             <th scope="col">البطاقة</th>
             <th scope="col">ملاحظات</th>
+            <th scope="col">تاريخ الإنشاء</th>
             <th scope="col">رقم التواصل</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-device let-i="index">
-          <tr [ngClass]="{
-              'duplicate-serial': device.isDuplicateSerial,
-              'duplicate-laptop':
-                device.isDuplicateLaptopName && !device.isDuplicateSerial
-            }" role="row">
+          <tr role="row">
             <td>
               <input type="checkbox" [checked]="device.isSelected" (change)="onCheckboxChange($event, device)" />
             </td>
@@ -183,15 +177,11 @@
             <td>{{ device.serialNumber }}</td>
             <td>{{ device.card }}</td>
             <td>{{ device.comment }}</td>
+            <td>{{ device.createdAt | date : "yyyy/MM/dd" }}</td>
             <td>{{ device.contactNumber }}</td>
           </tr>
         </ng-template>
       </p-table>
-      <div id="device-table-description" class="sr-only">
-        جدول يعرض بيانات الأجهزة المستوردة من ملف Excel مع إمكانية تحديد الأجهزة
-        للرفع. الصفوف ذات الأرقام التسلسلية المكررة تظهر باللون الأحمر، وذات
-        أسماء اللاب توب المكررة تظهر باللون البرتقالي.
-      </div>
     </div>
 
     <ng-template #noData>

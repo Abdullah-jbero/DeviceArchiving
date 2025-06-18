@@ -15,10 +15,9 @@ interface NavPage {
 export class HeaderComponent implements OnInit {
 
   @Input() pages: NavPage[] = [
-    { label: 'الأجهزة', route: '/devices' },
-    { label: 'العمليات', route: '/operations' },
-    { label: 'أنواع العمليات', route: '/operation-types' },
-    { label: 'الحسابات', route: '/account' },
+    { label: 'الصفحة الرئيسة', route: '/devices' },
+    { label: 'ادارة العمليات' , route: '/operation-types' },
+    { label: 'الأجهزة المحذوفة', route: 'devices/delete-devices' },
   ];
 
   userName: string = 'غير معروف';

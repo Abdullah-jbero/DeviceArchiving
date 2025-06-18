@@ -1,9 +1,8 @@
 ﻿namespace DeviceArchiving.Data.Enums;
 
-public enum UserRole
+public static class UserRole
 {
-    Admin,
-    User,
-    Manager
+    public const string Admin = "Admin";
+    public const string User = "User";
+    public const string Manager = "Manager";
 }
-

@@ -31,6 +31,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("register")]
+        [HttpPost("upload-devices")]
         [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterAsync([FromBody] AuthenticationRequest request)
