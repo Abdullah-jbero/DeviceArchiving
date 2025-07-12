@@ -6,7 +6,7 @@ import {
   ElementRef,
   ChangeDetectorRef,
 } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
 import * as XLSX from 'xlsx';
@@ -85,7 +85,7 @@ export class DeviceListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     var user = this.accountService.getUserInfo();
-    this.role =user.role || '';
+    this.role = user.role || '';
     this.loadDevices();
   }
 
@@ -476,14 +476,9 @@ export class DeviceListComponent implements OnInit, OnDestroy {
         return;
       }
 
-      if (this.checkDuplicatesInDatabase(this.excelData)) {
-        this.loading = false;
-        this.selectedFile = null;
-        this.excelData = [];
-        this.displayDialog = false;
-        return;
-      }
-      this.displayDialog = true;
+
+      this.checkDuplicatesInDatabaseAndShowDialog();
+
     };
     reader.onerror = () => {
       this.showError('حدث خطأ أثناء قراءة الملف');
@@ -742,36 +737,35 @@ export class DeviceListComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  private checkDuplicatesInDatabase(excelDevice: ExcelDevice[]): boolean {
-    const checkItems: CheckDuplicateDto[] = excelDevice.map((device) => ({
+  async checkDuplicatesInDatabaseAndShowDialog() {
+    this.loading = true;
+
+    const checkItems: CheckDuplicateDto[] = this.excelData.map((device) => ({
       serialNumber: device.serialNumber,
       laptopName: device.laptopName,
     }));
 
-    this.loading = true;
+    try {
+      const response = await firstValueFrom(this.deviceService.checkDuplicates(checkItems));
+      this.loading = false;
 
-    this.deviceService
-      .checkDuplicates(checkItems)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: BaseResponse<DuplicateCheckResponse>) => {
-          this.loading = false;
-          if (!response.success) {
-            this.showError(response.message || 'حدث خطأ أثناء التحقق من التكرارات');
-            return true;
-          }
-
-          return false;
-        },
-        error: (err: Error) => {
-          this.loading = true;
-          this.showError(err.message || 'حدث خطأ أثناء التحقق من التكرارات');
-          return true;
-        },
-      });
-
-    return true;
+      if (!response.success) {
+        this.showError(response.message || 'حدث خطأ أثناء التحقق من التكرارات');
+        this.selectedFile = null;
+        this.excelData = [];
+        this.displayDialog = false;
+      } else {
+        this.displayDialog = true;
+      }
+    } catch (err) {
+      this.loading = false;
+      this.showError((err as Error).message || 'حدث خطأ أثناء التحقق من التكرارات');
+      this.selectedFile = null;
+      this.excelData = [];
+      this.displayDialog = false;
+    }
   }
+
 
   private showWarning(message: string): void {
     this.messageService.add({
